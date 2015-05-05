@@ -1,3 +1,9 @@
 DATA
 software
 Ming
+*.jpg
+*.png
+*.nrrd
+*.dcm
+output*
+old*
