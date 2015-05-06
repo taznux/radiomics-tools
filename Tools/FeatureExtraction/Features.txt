@@ -1,0 +1,35 @@
+
+
+The InputImage features from the ScalarImageToTextureFeaturesFilter:
+ Mean of Energy = 0.0625
+ StandardDeviation of Energy = 0
+ Mean of Entropy = 4
+ StandardDeviation of Entropy = 0
+ Mean of Correlation = -0.000116835
+ StandardDeviation of Correlation = 0
+ Mean of InverseDifferenceMoment = 0.00772828
+ StandardDeviation of InverseDifferenceMoment = 0
+ Mean of Inertia = 14988.2
+ StandardDeviation of Inertia = 0
+ Mean of ClusterShade = 254941
+ StandardDeviation of ClusterShade = 0
+ Mean of ClusterProminence = 4.92094e+07
+ StandardDeviation of ClusterProminence = 0
+ Mean of HaralickCorrelation = 3.86258e+07
+ StandardDeviation of HaralickCorrelation = 0
+
+InputImage features from the LabelStatisticsImageFilter:
+Minimum   = 6.84
+Maximum   = 12.47
+Median    = nan
+Mean      = 10.3115
+Sigma     = 1.27976
+Variance  = 1.63779
+Sum       = 278.41
+Region    = ImageRegion (0x7fffe7756640)
+  Dimension: 3
+  Index: [74, 79, 140]
+  Size: [3, 3, 3]
+
+
+
