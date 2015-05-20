@@ -1,4 +1,4 @@
-DATA
+DICOM
 software
 Ming
 /Projects/BolusShaping/*.lst
@@ -26,3 +26,6 @@ CMakeCache.txt
 *.swp
 *.a
 *.so
+*.asv
+*.log
+~*
