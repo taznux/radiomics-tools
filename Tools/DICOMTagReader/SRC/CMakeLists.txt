@@ -4,6 +4,10 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 #------------------------------------------------ 
 # ITK
 #------------------------------------------------ 
+IF(WIN32)
+  SET(ITK_DIR "C:/Program Files/ITK/lib/cmake/ITK-4.8")
+ENDIF(WIN32)
+
 FIND_PACKAGE(ITK)
 IF(ITK_FOUND)
 	INCLUDE(${ITK_USE_FILE})

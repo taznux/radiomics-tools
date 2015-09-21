@@ -28,22 +28,25 @@ void recursive_read(const gdcm::DataSet& ds)
                 std::cout << ' ';
             std::cout << dict.GetDictEntry(tag).GetKeyword() << ": ";
             std::cout << elem.GetValue() << std::endl;
-            try
-            {
-                gdcm::SmartPointer<gdcm::SequenceOfItems> ssqi = elem.GetValueAsSQ();
-                for(int i = 1; i <= ssqi->GetNumberOfItems(); i++)
-                {
-                    const gdcm::Item & item = ssqi->GetItem(i); // Item start at #1
-                    const gdcm::DataSet& nested_ds = item.GetNestedDataSet();
+			try
+			{
+				gdcm::SmartPointer<gdcm::SequenceOfItems> ssqi = elem.GetValueAsSQ();
+				if (ssqi != NULL)
+				{
+					for (int i = 1; i <= ssqi->GetNumberOfItems(); i++)
+					{
+						const gdcm::Item & item = ssqi->GetItem(i); // Item start at #1
+						const gdcm::DataSet& nested_ds = item.GetNestedDataSet();
 
-                    depth++;
-                    recursive_read(nested_ds);
-                    depth--;
-                }
+						depth++;
+						recursive_read(nested_ds);
+						depth--;
+					}
+				}
             }
             catch (const gdcm::Exception& e)
             {
-                //std::cerr << e.what() << std::endl;
+                std::cerr << e.what() << std::endl;
             }
         }
      }
