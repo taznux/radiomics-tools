@@ -1,6 +1,7 @@
 #include "itkImage.h"
 #include "itkGDCMImageIO.h"
 #include "itkGDCMSeriesFileNames.h"
+#include "itkImageFileReader.h"
 #include "itkImageSeriesReader.h"
 #include "itkImageSeriesWriter.h"
 
@@ -11,11 +12,20 @@
 #include <boost/algorithm/string.hpp>
 
 
+typedef signed short ShortPixelType;
+typedef unsigned short UShortPixelType;
+typedef itk::Image< ShortPixelType, 3 > ShortImageType;
+typedef itk::Image< ShortPixelType, 2 > ShortDICOMImageType;
+typedef itk::Image< UShortPixelType, 3 > UShortImageType;
+typedef itk::Image< UShortPixelType, 2 > UShortDICOMImageType;
+
+typedef itk::GDCMSeriesFileNames NamesGeneratorType;
+typedef std::vector< std::string >   FileNamesContainer;
 
 int refineString(std::string &in)
 {
     boost::trim(in);
-    boost::replace_all(in, ",", "");
+    boost::replace_all(in, "/", "_");
     boost::replace_all(in, " ", "_");
 
     return in.length();
@@ -32,8 +42,8 @@ std::string refineName(std::string &fullName)
     boost::trim_if(strs[0], ! boost::algorithm::is_alpha());
     boost::trim_if(strs[1], ! boost::algorithm::is_alpha());
 
-    strs[0][0] = std::toupper(strs[0][0]);
-    strs[1][0] = std::toupper(strs[1][0]);
+    strs[0][0] = toupper(strs[0][0]);
+    strs[1][0] = toupper(strs[1][0]);
 
     refineName = strs[1] + "_" + strs[0];
 
@@ -51,12 +61,188 @@ std::string initialName(std::string &fullName)
     boost::trim_if(strs[0], ! boost::algorithm::is_alpha());
     boost::trim_if(strs[1], ! boost::algorithm::is_alpha());
 
-    strs[0][0] = std::toupper(strs[0][0]);
-    strs[1][0] = std::toupper(strs[1][0]);
+    strs[0][0] = toupper(strs[0][0]);
+    strs[1][0] = toupper(strs[1][0]);
 
     initialName = strs[1][0] + strs[0];
 
     return initialName;
+}
+
+std::string getModality(std::string fileName)
+{
+    typedef itk::ImageFileReader<ShortDICOMImageType> ReaderType;
+    typedef itk::GDCMImageIO ImageIOType;
+
+    ImageIOType::Pointer dicomIO = ImageIOType::New();
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetImageIO(dicomIO);
+
+    reader->SetFileName(fileName);
+    reader->Update();
+
+    std::string modality;
+
+    dicomIO->GetValueFromTag("0008|0060", modality);
+    //std::cout << modality << std::endl;
+
+    return modality;
+}
+
+template <typename ImageType>
+int readAndWrite(FileNamesContainer fileNames, std::string seriesDirectory)
+{
+    typedef itk::ImageSeriesReader<ImageType> ReaderType;
+    typedef itk::GDCMImageIO ImageIOType;
+    
+    ImageIOType::Pointer dicomIO = ImageIOType::New();
+    ReaderType::Pointer reader = ReaderType::New();
+    reader->SetImageIO(dicomIO);
+
+
+    reader->SetFileNames(fileNames);
+
+    try
+    {
+        reader->Update();
+    }
+    catch (itk::ExceptionObject &ex)
+    {
+        std::cout << ex << std::endl;
+        return EXIT_FAILURE;
+    }
+
+
+    std::string patientID;
+    std::string patientName;
+    std::string studyDate;
+    std::string studyTime;
+    std::string seriesTime;
+    std::string aqusitionTime;
+    std::string modality;
+    std::string studyDescription;
+    std::string seriesDescription;
+    std::string timepointID;
+    std::string convolutionKernel;
+
+    dicomIO->GetValueFromTag("0010|0010", patientName);
+    std::cout << patientName << std::endl;
+
+    dicomIO->GetValueFromTag("0010|0020", patientID);
+    std::cout << patientID << std::endl;
+
+
+    dicomIO->GetValueFromTag("0008|0020", studyDate);
+    std::cout << studyDate << std::endl;
+
+    dicomIO->GetValueFromTag("0008|0030", studyTime);
+    std::cout << studyTime << std::endl;
+
+    dicomIO->GetValueFromTag("0008|0031", seriesTime);
+    std::cout << seriesTime << std::endl;
+
+    dicomIO->GetValueFromTag("0008|0032", aqusitionTime);
+    std::cout << aqusitionTime << std::endl;
+
+    dicomIO->GetValueFromTag("0008|0060", modality);
+    std::cout << modality << std::endl;
+
+    dicomIO->GetValueFromTag("0008|1030", studyDescription);
+    std::cout << studyDescription << std::endl;
+
+    dicomIO->GetValueFromTag("0008|103e", seriesDescription);
+    std::cout << seriesDescription << std::endl;
+
+    dicomIO->GetValueFromTag("0012|0050", timepointID);
+    std::cout << timepointID << std::endl;
+
+    dicomIO->GetValueFromTag("0018|1210", convolutionKernel);
+    std::cout << convolutionKernel << std::endl;
+
+    refineString(patientID);
+    refineString(studyDate);
+    refineString(aqusitionTime);
+    refineString(studyDescription);
+    refineString(seriesDescription);
+    refineString(convolutionKernel);
+
+    
+    //
+    seriesDirectory.append("/");
+    seriesDirectory.append(patientID);// + "_" +refineName(patientName));
+
+    itksys::SystemTools::MakeDirectory(seriesDirectory.c_str());
+    //
+    seriesDirectory.append("/");
+
+    std::string nrrdFilename = seriesDirectory;
+    nrrdFilename.append(patientID + "_" + studyDate + "_" + modality);
+    /*if (seriesDescription.length() > 0)
+    {
+        nrrdFilename.append(seriesDescription);
+    }
+    else
+    {
+        if (convolutionKernel.length() > 0)
+            nrrdFilename.append(convolutionKernel);
+        else
+            nrrdFilename.append(studyTime);
+    }*/
+
+    nrrdFilename.append(".nrrd");
+
+    /*
+    if (studyDescription.length() > 0)
+    {
+    seriesDirectory.append(studyDescription);
+    studyDescriptionOld = studyDescription;
+    }
+    else
+    {
+    seriesDirectory.append(studyDescriptionOld);
+    }
+    //
+    seriesDirectory.append("/");
+    std::string nrrdFilename = seriesDirectory;
+    if (seriesDescription.length() > 0)
+    {
+    seriesDirectory.append(seriesDescription);
+    nrrdFilename.append(initialName(patientName) + "_" + seriesDescription + ".nrrd");
+    }
+    else
+    {
+    seriesDirectory.append(seriesIdentifier);
+    nrrdFilename.append(seriesIdentifier + ".nrrd");
+    }
+    */
+
+
+
+
+    ////////To write Output images /////////////////////
+    //typedef itk::ImageSeriesWriter<ImageType> WriterType;
+
+    //nameGenerator->SetOutputDirectory(seriesDirectory);
+    //FileNamesContainer OutputImageNames;
+    //OutputImageNames = nameGenerator->GetOutputFileNames();
+
+    //WriterType::Pointer writer = WriterType::New();
+    //writer->SetInput(reader->GetOutput());
+    //writer->SetImageIO(dicomIO);
+    //writer->SetFileNames(OutputImageNames);
+    //writer->SetMetaDataDictionaryArray(reader->GetMetaDataDictionaryArray());
+
+    std::cout << "Writing the image as " << std::endl << std::endl;
+    std::cout << seriesDirectory << std::endl << std::endl;
+
+    typedef itk::ImageFileWriter< ImageType> SingleOutImageWriterType;
+    SingleOutImageWriterType::Pointer OutWriter = SingleOutImageWriterType::New();
+    OutWriter->SetUseCompression(true);
+    OutWriter->SetInput(reader->GetOutput());
+    OutWriter->SetFileName(nrrdFilename);
+    OutWriter->Update();
+
+    return 0;
 }
 
 
@@ -70,16 +256,13 @@ int main( int argc, char *argv[] )
         return EXIT_FAILURE;
     }
 
-    typedef signed short    PixelType;
-    typedef itk::Image< PixelType, 3 >         ImageType;
-    typedef itk::Image< PixelType, 2 >         DICOMImageType;
-
-    typedef itk::GDCMSeriesFileNames NamesGeneratorType;
     NamesGeneratorType::Pointer nameGenerator = NamesGeneratorType::New();
     nameGenerator->SetUseSeriesDetails( true );
     nameGenerator->AddSeriesRestriction("0008|0021" );
     nameGenerator->SetRecursive( true );
     nameGenerator->SetDirectory( argv[1] );
+
+    std::string seriesDirectory = argv[2];
 
     try
     {
@@ -107,114 +290,25 @@ int main( int argc, char *argv[] )
             std::string seriesIdentifier;
             seriesIdentifier = seriesItr->c_str();
 
+            FileNamesContainer fileNames;
+            fileNames = nameGenerator->GetFileNames(seriesIdentifier);
+
             std::cout << std::endl << std::endl;
             std::cout << "Now reading series: " << std::endl << std::endl;
             std::cout << seriesIdentifier << std::endl;
             std::cout << std::endl << std::endl;
 
-            typedef itk::ImageSeriesReader< ImageType >        ReaderType;
-            ReaderType::Pointer reader = ReaderType::New();
 
-            typedef itk::GDCMImageIO       ImageIOType;
-            ImageIOType::Pointer dicomIO = ImageIOType::New();
-            reader->SetImageIO( dicomIO );
-
-            typedef std::vector< std::string >   FileNamesContainer;
-            FileNamesContainer fileNames;
-            fileNames = nameGenerator->GetFileNames( seriesIdentifier );
-
-
-            reader->SetFileNames( fileNames );
-
-            try
+            if(getModality(fileNames[0])=="PT") // PET
             {
-                reader->Update();
+                readAndWrite<UShortImageType>(fileNames, seriesDirectory);
             }
-            catch (itk::ExceptionObject &ex)
+            else // CT
             {
-                std::cout << ex << std::endl;
-                return EXIT_FAILURE;
+                readAndWrite<ShortImageType>(fileNames, seriesDirectory);
             }
 
-
-            std::string patientID;
-            std::string patientName;
-            std::string studyDescription;
-            std::string seriesDescription;
-
-            dicomIO->GetValueFromTag("0010|0010", patientName);
-            std::cout << patientName << std::endl;
-
-            dicomIO->GetValueFromTag("0010|0020", patientID);
-            std::cout << patientID << std::endl;
-
-            dicomIO->GetValueFromTag("0008|1030", studyDescription);
-            std::cout << studyDescription << std::endl;
-
-            dicomIO->GetValueFromTag("0008|103e", seriesDescription);
-            std::cout << seriesDescription << std::endl;
-
-            refineString(patientID);
-            refineString(studyDescription);
-            refineString(seriesDescription);
-
-            std::string seriesDirectory = argv[2];
-            //
-            seriesDirectory.append("/");
-            seriesDirectory.append(refineName(patientName) + "_" + patientID);
-            //
-            seriesDirectory.append("/");
-            if (studyDescription.length() > 0)
-            {
-                seriesDirectory.append(studyDescription);
-                studyDescriptionOld = studyDescription;
-            }
-            else
-            {
-                seriesDirectory.append(studyDescriptionOld);
-            }
-            //
-            seriesDirectory.append("/");
-            std::string nrrdFilename = seriesDirectory;
-            if (seriesDescription.length() > 0)
-            {
-                seriesDirectory.append(seriesDescription);
-                nrrdFilename.append(initialName(patientName) + "_" + seriesDescription + ".nrrd");
-            }
-            else
-            {
-                seriesDirectory.append(seriesIdentifier);
-                nrrdFilename.append(seriesIdentifier + ".nrrd");
-            }
-
-            itksys::SystemTools::MakeDirectory(seriesDirectory.c_str());
-
-
-
-            ////////To write Output images /////////////////////
-            typedef itk::ImageSeriesWriter< ImageType, DICOMImageType > WriterType;
-
-            nameGenerator->SetOutputDirectory( seriesDirectory );
-            FileNamesContainer OutputImageNames;
-            OutputImageNames = nameGenerator->GetOutputFileNames();
-
-            WriterType::Pointer writer = WriterType::New();
-            writer->SetInput(reader->GetOutput());
-            writer->SetImageIO(dicomIO);
-            writer->SetFileNames(OutputImageNames);
-            writer->SetMetaDataDictionaryArray(reader->GetMetaDataDictionaryArray());
-
-            std::cout  << "Writing the image as " << std::endl << std::endl;
-            std::cout  << seriesDirectory << std::endl << std::endl;
-
-            typedef itk::ImageFileWriter< ImageType> SingleOutImageWriterType;
-            SingleOutImageWriterType::Pointer OutWriter = SingleOutImageWriterType::New();
-            OutWriter->SetUseCompression(true);
-            OutWriter->SetInput(reader->GetOutput());
-            OutWriter->SetFileName(nrrdFilename);
-            OutWriter->Update();
-
-
+/*
             try
             {
                 writer->Update();
@@ -224,7 +318,7 @@ int main( int argc, char *argv[] )
                 std::cout << ex << std::endl;
                 return EXIT_FAILURE;
             }
-
+*/
         }
     }
     catch (itk::ExceptionObject &ex)
@@ -235,3 +329,4 @@ int main( int argc, char *argv[] )
 
     return EXIT_SUCCESS;
 }
+
