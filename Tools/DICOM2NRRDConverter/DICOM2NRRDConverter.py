@@ -13,7 +13,7 @@ if len(sys.argv) < 3:
 input_list = os.listdir(sys.argv[1])
 
 for input in input_list:
-    cmd = './BIN/DICOMReadAndWriteNLST '+sys.argv[1]+'/'+input+' '+sys.argv[2]
+    cmd = './BIN/DICOM2NRRDConverter '+sys.argv[1]+'/'+input+' '+sys.argv[2]
     print cmd
     os.system(cmd)
 
