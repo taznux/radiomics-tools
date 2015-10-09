@@ -89,14 +89,14 @@ std::string getModality(std::string fileName)
     return modality;
 }
 
-template <typename ImageType>
+template <typename TImageType>
 int readAndWrite(FileNamesContainer fileNames, std::string seriesDirectory)
 {
-    typedef itk::ImageSeriesReader<ImageType> ReaderType;
+    typedef itk::ImageSeriesReader<TImageType> ReaderType;
     typedef itk::GDCMImageIO ImageIOType;
     
     ImageIOType::Pointer dicomIO = ImageIOType::New();
-    ReaderType::Pointer reader = ReaderType::New();
+    typename ReaderType::Pointer reader = ReaderType::New();
     reader->SetImageIO(dicomIO);
 
 
@@ -235,8 +235,8 @@ int readAndWrite(FileNamesContainer fileNames, std::string seriesDirectory)
     std::cout << "Writing the image as " << std::endl << std::endl;
     std::cout << seriesDirectory << std::endl << std::endl;
 
-    typedef itk::ImageFileWriter< ImageType> SingleOutImageWriterType;
-    SingleOutImageWriterType::Pointer OutWriter = SingleOutImageWriterType::New();
+    typedef itk::ImageFileWriter<TImageType> SingleOutImageWriterType;
+    typename SingleOutImageWriterType::Pointer OutWriter = SingleOutImageWriterType::New();
     OutWriter->SetUseCompression(true);
     OutWriter->SetInput(reader->GetOutput());
     OutWriter->SetFileName(nrrdFilename);
@@ -244,7 +244,6 @@ int readAndWrite(FileNamesContainer fileNames, std::string seriesDirectory)
 
     return 0;
 }
-
 
 int main( int argc, char *argv[] )
 {
