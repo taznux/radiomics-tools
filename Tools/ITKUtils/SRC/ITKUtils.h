@@ -12,6 +12,8 @@
 #include <itkImageRegionIterator.h>
 #include <itkImageRegionIteratorWithIndex.h>
 
+#include "itkMaskedSTAPLEImageFilter.h"
+
 #include <string>
 using namespace std;
 
@@ -46,7 +48,7 @@ typedef InputImageType::IndexType      IndexType;
 
 
 template <typename TImageType>
-typename TImageType::Pointer ReadImageFile(char *fileName)
+typename TImageType::Pointer ReadImageFile(string fileName)
 {
     typedef itk::ImageFileReader<TImageType> ImageReaderType;
 
@@ -61,7 +63,7 @@ typename TImageType::Pointer ReadImageFile(char *fileName)
 
 
 template <typename TImageType>
-void WriteImageFile(string fileName,typename TImageType::Pointer outputImage)
+void WriteImageFile(typename TImageType::Pointer outputImage, string fileName)
 {
     ////////To write Output images /////////////////////
     typedef itk::ImageFileWriter<TImageType> ImageWriterType;
@@ -85,16 +87,6 @@ void WriteImageFile(string fileName,typename TImageType::Pointer outputImage)
 
 
 template <typename TImageType>
-typename TImageType::Pointer ReadImageFile(string fileName)
-{return ReadImageFile<TImageType>(fileName.c_str());}
-
-template <typename TImageType>
-void WriteImageFile(typename TImageType::Pointer outputImage,string fileName)
-{WriteImageFile<TImageType>(outputImage,fileName.c_str());}
-
-
-
-template <typename TImageType>
 typename TImageType::Pointer ApplyRoi(typename TImageType::Pointer inputImage, itk::ImageRegion<Dimension> inputRegion)
 {
     typename TImageType::Pointer roiImage;
@@ -111,7 +103,7 @@ typename TImageType::Pointer ApplyRoi(typename TImageType::Pointer inputImage, i
     return roiImage;
  }
 
-void GetMaskImage(LabelImageType::Pointer, LabelPixelType, MaskImageType::Pointer);
+MaskImageType::Pointer GetMaskImage(LabelImageType::Pointer, LabelPixelType);
 
 MaskImageType::RegionType RoiIndexToRegion(MaskImageType::IndexType, MaskImageType::IndexType);
 void RegionToIndex(MaskImageType::RegionType, MaskImageType::IndexType &, MaskImageType::IndexType &);
