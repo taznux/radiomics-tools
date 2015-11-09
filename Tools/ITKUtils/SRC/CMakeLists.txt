@@ -20,6 +20,7 @@ ENDIF(ITK_FOUND)
 
 ADD_LIBRARY(ITKUtils
     ITKUtils.cxx
+    itkMaskedSTAPLEImageFilter.hxx
 )
 
 SET (BUILD_SHARED_LIBS OFF)

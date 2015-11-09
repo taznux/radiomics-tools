@@ -4,8 +4,13 @@
 
 #include "ITKUtils.h"
 
-void GetMaskImage(LabelImageType::Pointer labelImage, LabelPixelType selectedLabelValue, MaskImageType::Pointer maskImage)
+MaskImageType::Pointer GetMaskImage(LabelImageType::Pointer labelImage, LabelPixelType selectedLabelValue)
 {
+    MaskImageType::Pointer maskImage = MaskImageType::New();
+    maskImage->SetRegions( labelImage->GetRequestedRegion() );
+    maskImage->CopyInformation( labelImage );
+    maskImage->Allocate();
+
     itk::ImageRegionIterator< LabelImageType > label(labelImage, labelImage->GetBufferedRegion() );
     itk::ImageRegionIterator< MaskImageType > mask(maskImage, maskImage->GetBufferedRegion() );
 
@@ -21,6 +26,8 @@ void GetMaskImage(LabelImageType::Pointer labelImage, LabelPixelType selectedLab
             mask.Set(0);
         }
     }
+
+    return maskImage;
 }
 
 MaskImageType::RegionType RoiIndexToRegion(MaskImageType::IndexType roiStart, MaskImageType::IndexType roiEnd)
@@ -172,15 +179,15 @@ void ExpandRoi(MaskImageType::Pointer maskImage, MaskImageType::RegionType &mask
         if (diff >= index[i])
         {
             maskStart[i] -= radius;
-            maskSize[i] += radius;
+            maskSize[i] += 2*radius;
         }
         else
         {
             maskStart[i] = index[i];
         }
         maskStart[i] = (maskStart[i] < 0) ? 0 : maskStart[i];
-        maskSize[i] = (static_cast<unsigned int>(maskStart[i] + maskSize[i] + radius) < maskImageSize[i]) ?
-                      (maskSize[i] + radius) : (maskImageSize[i] - maskStart[i] - 1);
+        maskSize[i] = (static_cast<unsigned int>(maskStart[i] + maskSize[i] - 1) < maskImageSize[i]) ?
+                      maskSize[i] : (maskImageSize[i] - maskStart[i]);
     }
 
     cout << "maskStart " << maskStart << ", maskEnd " << maskStart + maskSize << "" << endl;
