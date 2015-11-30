@@ -7,3 +7,7 @@ all:
 		cd ..; \
     fi
 	make -C BIN
+
+clean:
+	@rm -rf BIN
+	@echo "Clean up the build!!"
