@@ -1,4 +1,4 @@
-PROJECT (CE_4DCT)
+PROJECT (ITK_Utils)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 #------------------------------------------------ 
