@@ -19,8 +19,12 @@ ELSE(ITK_FOUND)
 ENDIF(ITK_FOUND)
 
 ADD_LIBRARY(ITKUtils
-    ITKUtils.cxx
-    itkMaskedSTAPLEImageFilter.hxx
+  ITKUtils.cxx
+  itkMaskedSTAPLEImageFilter.hxx
+  itkMaskedSpatialObjectToImageFilter.hxx
+  itkGrowCutSegmentationImageFilter.hxx
+  itkFastGrowCutSegmentationImageFilter.hxx
+  fibheap.cpp
 )
 
 SET (BUILD_SHARED_LIBS OFF)
