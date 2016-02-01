@@ -246,3 +246,30 @@ void BoundingCheck(MaskImageType::Pointer maskImage, InputImageType::Pointer inp
     maskRegion.SetIndex(ostart);
     maskRegion.SetSize(osize);
 }
+
+MaskImageType::Pointer unionImages(vector<MaskImageType::Pointer> inputMaskImages)
+{
+    MaskImageType::Pointer outputMaskImage = MaskImageType::New();
+    outputMaskImage->SetRegions( inputMaskImages[0]->GetLargestPossibleRegion() );
+    outputMaskImage->CopyInformation( inputMaskImages[0] );
+    outputMaskImage->Allocate();
+    outputMaskImage->FillBuffer(0);
+
+    int volume = 0;
+    for (int i = 0; i < inputMaskImages.size(); i++)
+    {   
+        itk::ImageRegionIterator< MaskImageType > in(inputMaskImages[i], inputMaskImages[i]->GetBufferedRegion() );
+        itk::ImageRegionIterator< MaskImageType > out(outputMaskImage, outputMaskImage->GetBufferedRegion() );
+
+        for (in.GoToBegin(), out.GoToBegin(); !in.IsAtEnd(); ++in, ++out)
+        {
+            MaskImageType::PixelType mask = in.Get();
+            if (mask > 0)
+            {
+                out.Set(maskValue);
+            }
+        }
+    }
+ 
+    return outputMaskImage;
+}
