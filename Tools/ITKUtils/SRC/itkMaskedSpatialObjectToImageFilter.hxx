@@ -246,7 +246,7 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   typename SpatialObjectToImageFilterType::SpacingType maskSpacing;    //Set Spacing
   for (unsigned int dim = 0; dim < itkGetStaticConstMacro(OutputImageDimension); dim++)
   {
-    maskSize[dim] = this->m_Size[dim] / this->m_MaskResampleFactor;
+    maskSize[dim] = (unsigned int)(this->m_Size[dim] / this->m_MaskResampleFactor);
     maskSpacing[dim] = this->m_Spacing[dim] * ((double)this->m_Size[dim] / (double)maskSize[dim]);
   }
   //std::cout << this->m_Size << " " << maskSize << std::endl;
