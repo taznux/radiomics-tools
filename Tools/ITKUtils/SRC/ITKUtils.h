@@ -29,9 +29,9 @@
 using namespace std;
 
 // Definition of Data type
-typedef short InputPixelType;
+typedef float InputPixelType;
 typedef float InternalPixelType;
-typedef short OutputPixelType;
+typedef float OutputPixelType;
 
 typedef short LabelPixelType;
 typedef short MaskPixelType;
