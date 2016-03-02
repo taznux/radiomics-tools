@@ -40,3 +40,5 @@ CMakeCache.txt
 *.xlsx
 *.RData
 *.pdf
+*.mexw64
+*.mexa64
