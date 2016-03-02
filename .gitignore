@@ -36,3 +36,7 @@ CMakeCache.txt
 *.log
 *.csv
 ~*
+*.Rhistory
+*.xlsx
+*.RData
+*.pdf
