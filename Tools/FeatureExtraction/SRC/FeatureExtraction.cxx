@@ -21,7 +21,6 @@
 // For Feature
 #include <itkRescaleIntensityImageFilter.h>
 
-#include <itkSimpleFilterWatcher.h>
 
 #include <itkMinimumMaximumImageCalculator.h>
 #include <itkStatisticsImageFilter.h>
@@ -55,9 +54,6 @@
 #include <itkSubtractImageFilter.h>
 #include <itkAndImageFilter.h>
 
-#include "itkBinaryBallStructuringElement.h"
-#include "itkBinaryErodeImageFilter.h"
-#include "itkBinaryDilateImageFilter.h"
 
 // For file operation
 #include <iostream>
@@ -69,53 +65,11 @@
 #include <itkThresholdImageFilter.h>
 #include <itkBinaryThresholdImageFilter.h>
 
-// Definition of Data type
-typedef short InputPixelType;
-typedef float InternalPixelType;
-typedef short OutputPixelType;
-
-typedef short LabelPixelType;
-typedef short MaskPixelType;
-//typedef unsigned char MaskPixelType;
-
-const unsigned int Dimension = 3;
-const unsigned int OutputDimension = 2;
-
-const MaskPixelType maskValue = 1;
-
-
-typedef itk::Image< InputPixelType, Dimension >  InputImageType;
-typedef itk::Image< InternalPixelType, Dimension > InternalImageType;
-typedef itk::Image< OutputPixelType, OutputDimension > OutputImageType;
-typedef itk::Image< InputPixelType, Dimension-1 > InputImage2DType;
-
-typedef itk::Image<LabelPixelType, Dimension> LabelImageType;
-typedef itk::Image<MaskPixelType, Dimension> MaskImageType;
-typedef itk::Image<MaskPixelType, Dimension-1> MaskImage2DType;
-
-
-// Definition of IO
-typedef itk::ImageFileReader< InputImageType > InputImageReaderType;
-typedef itk::ImageFileReader< LabelImageType > LabelImageTypeReaderType;
-
-typedef itk::ImageFileWriter< InputImageType >  WriterType;
-typedef itk::ImageFileWriter< InternalImageType >  WriterTypeFloat;
-
-typedef itk::ImageFileWriter< MaskImageType >  MaskWriterType;
-
-
-// Definition of Properties
-typedef InputImageType::SpacingType    SpacingType;
-typedef InputImageType::PointType      OriginType;
-typedef InputImageType::RegionType     RegionType;
-typedef InputImageType::SizeType       SizeType;
-typedef InputImageType::IndexType      IndexType;
-
-
-// Definition of Feature Extraction
-typedef itk::MinimumMaximumImageCalculator< InputImageType > MaxMinFilterType;
+#include "ITKUtils.h"
 
 using namespace std;
+
+const unsigned int NumberOfBins = 256;
 
 void decodeCharactheristicGLCM(int x, char name[])
 {
@@ -185,210 +139,6 @@ void decodeCharactheristicGLRM(int x, char name[])
     }
 }
 
-template <typename TImageType>
-itk::SmartPointer<TImageType> ReadImageFile(char *fileName)
-{
-    typedef itk::ImageFileReader<TImageType> ImageReaderType;
-
-    typename ImageReaderType::Pointer ImageReader = ImageReaderType::New();
-    ImageReader->SetFileName(fileName);
-    ImageReader->Update();
-
-    itk::SmartPointer<TImageType> Image = ImageReader->GetOutput();
-
-    return Image;
-}
-
-template <typename TImageType>
-itk::SmartPointer<TImageType> ApplyRoi(itk::SmartPointer<TImageType> inputImage, itk::ImageRegion<Dimension> inputRegion)
-{
-    itk::SmartPointer<TImageType> roiImage;
-
-    typedef itk::RegionOfInterestImageFilter<TImageType, TImageType> RoiFilterType;
-    typename RoiFilterType::Pointer RoiFilter = RoiFilterType::New();
-    RoiFilter->SetRegionOfInterest(inputRegion);
-
-    RoiFilter->SetInput( inputImage );
-    RoiFilter->Update();
-
-    roiImage = RoiFilter->GetOutput();
-
-    return roiImage;
-}
-
-MaskImageType::RegionType RoiIndexToRegion(MaskImageType::IndexType roiStart, MaskImageType::IndexType roiEnd)
-{
-    MaskImageType::RegionType outputReigion;
-    MaskImageType::IndexType outputStart;
-    MaskImageType::SizeType outputSize;
-
-    for (unsigned n = 0; n < Dimension; n++)
-    {
-        outputStart[n] = roiStart[n];
-        outputSize[n] = roiEnd[n] - roiStart[n] + 1;
-    }
-
-    outputReigion.SetIndex(outputStart);
-    outputReigion.SetSize(outputSize);
-
-    return outputReigion;
-}
-
-void RoiRegionToIndex(MaskImageType::RegionType outputReigion, MaskImageType::IndexType &roiStart, MaskImageType::IndexType &roiEnd)
-{
-    MaskImageType::IndexType outputStart = outputReigion.GetIndex();
-    MaskImageType::SizeType outputSize = outputReigion.GetSize();
-
-    for (unsigned n = 0; n < Dimension; n++)
-    {
-        roiStart[n] = outputStart[n];
-        roiEnd[n] = outputStart[n] + outputSize[n] - 1;
-    }
-}
-
-
-MaskImageType::Pointer GetMaskImage(LabelImageType::Pointer labelImage, LabelPixelType selectedLabelValue, bool isExpand = true)
-{
-    MaskImageType::Pointer maskImage  = MaskImageType::New();
-    maskImage->SetRegions( labelImage->GetRequestedRegion() );
-    maskImage->CopyInformation( labelImage );
-    maskImage->Allocate();
-    maskImage->FillBuffer(0);
-
-    MaskImageType::SpacingType spacing = maskImage->GetSpacing();
-
-    MaskImageType::RegionType maskRegion;
-    MaskImageType::IndexType roiStart;
-    MaskImageType::IndexType roiEnd;
-   
-
-    roiStart[0] = 0; roiStart[1] = 0; roiStart[2] = 0;
-    roiEnd[0] = 0; roiEnd[1] = 0; roiEnd[2] = 0;
-
-
-    itk::ImageRegionIterator< LabelImageType > label(labelImage, labelImage->GetBufferedRegion() );
-    itk::ImageRegionIteratorWithIndex< MaskImageType > mask(maskImage, maskImage->GetBufferedRegion() );
-
-    unsigned long foundMask = false;
-    unsigned long numZero = 0; // to ignore additional iteration
-
-    for (label.GoToBegin(), mask.GoToBegin(); !label.IsAtEnd(); ++label, ++mask)
-    {
-        LabelImageType::PixelType color = label.Get();
-        if (color == selectedLabelValue)
-        {
-            MaskImageType::IndexType idx = mask.GetIndex();
-            for (unsigned i = 0; i < Dimension; i++)
-            {
-                if (!foundMask)
-                {
-                    roiStart[i] = idx[i];
-                    roiEnd[i] = idx[i];
-                }
-                else
-                {
-                    if (idx[i] <= roiStart[i])
-                    {
-                        roiStart[i] = idx[i];
-                    }
-                    if (idx[i] >= roiEnd[i])
-                    {
-                        roiEnd[i] = idx[i];
-                    }
-                }
-            }
-            
-            foundMask++;
-            numZero = 0;
-
-            mask.Set(maskValue);
-        }
-        else
-        {
-            numZero++;
-        }
-        /*if(foundMask > 5 && numZero > 512*512)
-        {
-            cout << "Found mask!!" << endl;
-            break;
-        }*/
-    }
-    cout << "roiStart " << roiStart << ", roiEnd " << roiEnd << "" << endl;
-
-    maskRegion = RoiIndexToRegion(roiStart, roiEnd);
-    maskImage->SetRequestedRegion(maskRegion);
-
-    if(isExpand)
-    {
-        const double objectSize = 5;
-
-        MaskImageType::IndexType maskStart = maskRegion.GetIndex();
-        MaskImageType::SizeType maskSize = maskRegion.GetSize();
-
-
-        cout << "maskStart " << maskStart << ", maskEnd " << maskStart + maskSize << "" << endl;
-        for (unsigned i = 0; i < Dimension; i++)
-        {
-            MaskImageType::PixelType radius = static_cast< MaskImageType::PixelType> (objectSize/spacing[i]);
-            maskStart[i] -= radius;
-            maskSize[i] += 2*radius;
-        }
-
-        cout << "Expaned maskStart " << maskStart << ", maskEnd " << maskStart + maskSize << "" << endl;
-        maskRegion.SetIndex(maskStart);
-        maskRegion.SetSize(maskSize);
-
-        maskImage->SetRequestedRegion(maskRegion);
-    }
-
-
-    return maskImage;
-}
-
-void BoundingCheck(MaskImageType::Pointer maskImage, InputImageType::Pointer inputImage, MaskImageType::RegionType &maskRegion, InputImageType::RegionType &inputRegion)
-{
-    RegionType inputImageRegion = inputImage->GetLargestPossibleRegion();
-    SizeType inputImageSize = inputImageRegion.GetSize();
-
-    MaskImageType::IndexType maskStart = maskRegion.GetIndex();
-    MaskImageType::SizeType maskSize = maskRegion.GetSize();
-    MaskImageType::IndexType maskCenter;
-
-    InputImageType::IndexType istart;
-    InputImageType::SizeType isize;
-
-    MaskImageType::IndexType ostart;
-    MaskImageType::SizeType osize;
-
-    MaskImageType::PointType ptRoiStart;
-    maskImage->TransformIndexToPhysicalPoint(maskStart, ptRoiStart);
-    inputImage->TransformPhysicalPointToIndex(ptRoiStart, istart);
-
-    for (unsigned n = 0; n < Dimension; n++)
-    {
-        // Input image
-        isize[n] = maskSize[n];
-
-        istart[n] = (istart[n] < 0) ? 0 : istart[n];
-        isize[n] = (static_cast<unsigned int>(isize[n] + istart[n]) < inputImageSize[n]) ?
-                   isize[n] : (inputImageSize[n] - istart[n] - 1);
-        // Mask
-        ostart[n] = maskStart[n];
-        osize[n] = isize[n];
-        maskCenter[n] = static_cast<OutputPixelType>(round(isize[n] / 2));
-    }
-
-    cout << "maskStart " << maskStart << ", maskEnd " << maskStart + maskSize << "" << endl;
-    cout << "istart " << istart << ", isize " << isize << "" << endl;
-    cout << "ostart " << ostart << ", osize " << osize << "" << endl;
-    cout << "maskCenter " << maskCenter << endl;
-
-    inputRegion.SetIndex(istart);
-    inputRegion.SetSize(isize);
-
-    maskRegion.SetIndex(ostart);
-    maskRegion.SetSize(osize);
-}
 
 void CalcIntensityFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, InputPixelType &inputMin, InputPixelType &inputMax, ostream &outfile)
 {
@@ -435,6 +185,8 @@ void CalcIntensityFeatures(InputImageType::Pointer inputImage, MaskImageType::Po
 
 void CalcGeometryFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, ostream &outfile)
 {
+    SpacingType spacing = inputImage->GetSpacing();
+
     typedef itk::LabelGeometryImageFilter< MaskImageType, InputImageType > LabelGeometryType;
     LabelGeometryType::Pointer labelGeometryFilter = LabelGeometryType::New();
 
@@ -465,7 +217,7 @@ void CalcGeometryFeatures(InputImageType::Pointer inputImage, MaskImageType::Poi
     cout << "Image features from the LabelGeometryImageFilter:" << endl;
     //outfile << "inputImage features from the LabelGeometryImageFilter:" << endl;
 
-    outfile << "Volume = " << labelGeometryFilter->GetVolume(maskValue) << endl;
+    outfile << "Volume = " << labelGeometryFilter->GetVolume(maskValue)*spacing[0]*spacing[1]*spacing[2]/1000<< endl;
     outfile << "IntegratedIntensity = " << labelGeometryFilter->GetIntegratedIntensity(maskValue) << endl;
     outfile << "Centroid = " << labelGeometryFilter->GetCentroid(maskValue) << endl;
     outfile << "WeightedCentroid = " << labelGeometryFilter->GetWeightedCentroid(maskValue) << endl;
@@ -477,9 +229,9 @@ void CalcGeometryFeatures(InputImageType::Pointer inputImage, MaskImageType::Poi
     outfile << "Orientation = " << labelGeometryFilter->GetOrientation(maskValue) << endl;
     //outfile << "Boundingbox = " << labelGeometryFilter->GetBoundingBox(maskValue) << endl;
 
-    outfile << "BoundingBoxVolume = " << labelGeometryFilter->GetBoundingBoxVolume(maskValue) << endl;
+    outfile << "BoundingBoxVolume = " << labelGeometryFilter->GetBoundingBoxVolume(maskValue)*spacing[0]*spacing[1]*spacing[2]/1000 << endl;
     outfile << "BoundingBoxSize = " << labelGeometryFilter->GetBoundingBoxSize(maskValue) << endl;
-    outfile << "OrientedBoundingBoxVolume = " << labelGeometryFilter->GetOrientedBoundingBoxVolume(maskValue) << endl;
+    outfile << "OrientedBoundingBoxVolume = " << labelGeometryFilter->GetOrientedBoundingBoxVolume(maskValue)*spacing[0]*spacing[1]*spacing[2]/1000 << endl;
     outfile << "OrientedBoundingBoxSize = " << labelGeometryFilter->GetOrientedBoundingBoxSize(maskValue) << endl;
 
     //outfile << "Eigenvalues = " << labelGeometryFilter->GetEigenvalues(maskValue) << endl;
@@ -499,15 +251,15 @@ void CalcShapeAndIntensityFeatures(InputImageType::Pointer inputImage, MaskImage
     //converting binary image to Statistics label map
     typedef itk::BinaryImageToStatisticsLabelMapFilter< MaskImageType, InputImageType, LabelMapTypeS > I2LSType;
     I2LSType::Pointer i2ls = I2LSType::New();
-    //itk::SimpleFilterWatcher watcher1( i2ls );
+    // itk::SimpleFilterWatcher watcher1( i2ls );
 
     i2ls->FullyConnectedOn();
     int inputForegroundValue = 1;   bool computeFeretDiameter =  1;     unsigned int outputBackgroundValue = 0;
-    bool computePerimeter =  1;     bool computeHistogram =  1;     unsigned int numberOfBins = 32;
+    bool computePerimeter =  1;     bool computeHistogram =  1;     unsigned int numberOfBins = NumberOfBins;
     i2ls->SetInputForegroundValue( inputForegroundValue );
     i2ls->SetOutputBackgroundValue( outputBackgroundValue );
     i2ls->SetComputeFeretDiameter( computeFeretDiameter );
-    //i2ls->ComputeFeretDiameterOff();
+    i2ls->ComputeFeretDiameterOff();
     i2ls->ComputeFeretDiameterOn();
     i2ls->SetComputePerimeter( computePerimeter );
     i2ls->ComputePerimeterOn();
@@ -529,13 +281,14 @@ void CalcShapeAndIntensityFeatures(InputImageType::Pointer inputImage, MaskImage
     labelMapS = i2ls->GetOutput();
     labelObjectS = labelMapS->GetLabelObject(maskValue);
 
+
     //    cout << "BoundingBox = " << labelObjectS->GetBoundingBox() << endl;
     cout << "CenterOfGravity = " << labelObjectS->GetCenterOfGravity() << endl;
     cout << "Centroid = " << labelObjectS->GetCentroid() << endl;
     cout << "Elongation = " << labelObjectS->GetElongation() << endl;
-    cout << "EquivalentEllipsoidDiameter = " << labelObjectS->GetEquivalentEllipsoidDiameter() << endl;
-    //cout << "EquivalentSphericalPerimeter = " << labelObjectS->GetEquivalentSphericalPerimeter() << endl;
-    cout << "EquivalentSphericalRadius = " << labelObjectS->GetEquivalentSphericalRadius() << endl;
+    //  cout << "EquivalentEllipsoidDiameter = " << labelObjectS->GetEquivalentEllipsoidDiameter() << endl;
+    //  cout << "EquivalentSphericalPerimeter = " << labelObjectS->GetEquivalentSphericalPerimeter() << endl;
+    //       cout << "EquivalentSphericalRadius = " << labelObjectS->GetEquivalentSphericalRadius() << endl;
     cout << "FeretDiameter = " << labelObjectS->GetFeretDiameter() << endl;
     //cout << "Histogram = " << labelObjectS->GetHistogram() << endl;
     //  cout << "Index = " << labelObjectS->GetIndex() << endl;
@@ -560,12 +313,12 @@ void CalcShapeAndIntensityFeatures(InputImageType::Pointer inputImage, MaskImage
     cout << "PhysicalSize = " << labelObjectS->GetPhysicalSize() << endl;
     cout << "PrincipalAxes = " << labelObjectS->GetPrincipalAxes() << endl;
     cout << "PrincipalMoments = " << labelObjectS->GetPrincipalMoments() << endl;
-    //cout << "ReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
+    cout << "ReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
     cout << "RegionElongation = " << labelObjectS->GetElongation() << endl; // RegionElongation is disappeared
     cout << "Roundness = " << labelObjectS->GetRoundness() << endl;
     cout << "SizeRegionRatio = " << 0 /*labelObjectS->GetSizeRegionRatio()*/ << endl; // This property is no longer provide
     cout << "Skewness = " << labelObjectS->GetSkewness() << endl;
-    //  cout << "StandardDeviation = " << labelObjectS->GetStandardDeviation() << endl;
+    cout << "StandardDeviation = " << labelObjectS->GetStandardDeviation() << endl;
     cout << "Sum = " << labelObjectS->GetSum() << endl;
     cout << "Variance = " << labelObjectS->GetVariance() << endl;
     //  cout << "WeightedElongation = " << labelObjectS->GetWeightedElongation() << endl;
@@ -604,7 +357,7 @@ void CalcShapeAndIntensityFeatures(InputImageType::Pointer inputImage, MaskImage
     outfile << "PhysicalSize = " << labelObjectS->GetPhysicalSize() << endl;
     outfile << "PrincipalAxes = " << labelObjectS->GetPrincipalAxes() << endl;
     outfile << "PrincipalMoments = " << labelObjectS->GetPrincipalMoments() << endl;
-    //outfile << "ReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
+    outfile << "ReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
     outfile << "RegionElongation = " << labelObjectS->GetElongation() << endl; // deleted
     outfile << "Roundness = " << labelObjectS->GetRoundness() << endl;
     //outfile << "SizeRegionRatio = " << labelObjectS->GetSizeRegionRatio() << endl; // deleted
@@ -630,7 +383,7 @@ void CalcShapeAndIntensityFeatures(InputImage2DType::Pointer inputImage, MaskIma
 
     i2ls->FullyConnectedOn();
     int inputForegroundValue = 1;   bool computeFeretDiameter =  1;     unsigned int outputBackgroundValue = 0;
-    bool computePerimeter =  1;     bool computeHistogram =  1;     unsigned int numberOfBins = 32;
+    bool computePerimeter =  1;     bool computeHistogram =  1;     unsigned int numberOfBins = NumberOfBins;
     i2ls->SetInputForegroundValue( inputForegroundValue );
     i2ls->SetOutputBackgroundValue( outputBackgroundValue );
     i2ls->SetComputeFeretDiameter( computeFeretDiameter );
@@ -657,7 +410,7 @@ void CalcShapeAndIntensityFeatures(InputImage2DType::Pointer inputImage, MaskIma
     labelObjectS = labelMapS->GetLabelObject(maskValue);
 
 
-    cout << "2D BoundingBox = " << labelObjectS->GetBoundingBox() << endl;
+    //    cout << "2D BoundingBox = " << labelObjectS->GetBoundingBox() << endl;
     cout << "2D CenterOfGravity = " << labelObjectS->GetCenterOfGravity() << endl;
     cout << "2D Centroid = " << labelObjectS->GetCentroid() << endl;
     cout << "2D Elongation = " << labelObjectS->GetElongation() << endl;
@@ -688,18 +441,18 @@ void CalcShapeAndIntensityFeatures(InputImage2DType::Pointer inputImage, MaskIma
     cout << "2D PhysicalSize = " << labelObjectS->GetPhysicalSize() << endl;
     cout << "2D PrincipalAxes = " << labelObjectS->GetPrincipalAxes() << endl;
     cout << "2D PrincipalMoments = " << labelObjectS->GetPrincipalMoments() << endl;
-    //cout << "2D ReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
+    cout << "2D ReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
     cout << "2D RegionElongation = " << labelObjectS->GetElongation() << endl; // RegionElongation is disappeared
     cout << "2D Roundness = " << labelObjectS->GetRoundness() << endl;
     cout << "2D SizeRegionRatio = " << 0 /*labelObjectS->GetSizeRegionRatio()*/ << endl; // This property is no longer provide
     cout << "2D Skewness = " << labelObjectS->GetSkewness() << endl;
-    //  cout << "2D StandardDeviation = " << labelObjectS->GetStandardDeviation() << endl;
+    cout << "2D StandardDeviation = " << labelObjectS->GetStandardDeviation() << endl;
     cout << "2D Sum = " << labelObjectS->GetSum() << endl;
     cout << "2D Variance = " << labelObjectS->GetVariance() << endl;
-    cout << "2D WeightedElongation = " << labelObjectS->GetWeightedElongation() << endl;
-    cout << "2D WeightedFlatness = " << labelObjectS->GetWeightedFlatness() << endl;
-    cout << "2D WeightedPrincipalAxes = " << labelObjectS->GetWeightedPrincipalAxes() << endl;
-    cout << "2D WeightedPrincipalMoments = " << labelObjectS->GetWeightedPrincipalMoments() << endl;
+    //  cout << "2D WeightedElongation = " << labelObjectS->GetWeightedElongation() << endl;
+    //        cout << "2D WeightedFlatness = " << labelObjectS->GetWeightedFlatness() << endl;
+    //  cout << "2D WeightedPrincipalAxes = " << labelObjectS->GetWeightedPrincipalAxes() << endl;
+    //        cout << "2D WeightedPrincipalMoments = " << labelObjectS->GetWeightedPrincipalMoments() << endl;
 
     //outfile << "2DBoundingBox = " << labelObjectS->GetBoundingBox() << endl;
     outfile << "2DCenterOfGravity = " << labelObjectS->GetCenterOfGravity() << endl;
@@ -732,7 +485,7 @@ void CalcShapeAndIntensityFeatures(InputImage2DType::Pointer inputImage, MaskIma
     outfile << "2DPhysicalSize = " << labelObjectS->GetPhysicalSize() << endl;
     outfile << "2DPrincipalAxes = " << labelObjectS->GetPrincipalAxes() << endl;
     outfile << "2DPrincipalMoments = " << labelObjectS->GetPrincipalMoments() << endl;
-    //outfile << "2DReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
+    outfile << "2DReferenceCount = " << labelObjectS->GetReferenceCount() << endl;
     outfile << "2DRegionElongation = " << labelObjectS->GetElongation() << endl; // deleted
     outfile << "2DRoundness = " << labelObjectS->GetRoundness() << endl;
     //outfile << "2DSizeRegionRatio = " << labelObjectS->GetSizeRegionRatio() << endl; // deleted
@@ -746,9 +499,9 @@ void CalcShapeAndIntensityFeatures(InputImage2DType::Pointer inputImage, MaskIma
     outfile << "2DWeightedPrincipalMoments = " << labelObjectS->GetWeightedPrincipalMoments() << endl;
 }
 
-void CalcGlcmFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, InputPixelType inputMin, InputPixelType inputMax, ostream &outfile)
+void CalcGlcmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer maskImage, InputPixelType inputMin, InputPixelType inputMax, ostream &outfile)
 {
-    typedef itk::Statistics::ScalarImageToTextureFeaturesFilter<MaskImageType> TextureFilterType;
+    typedef itk::Statistics::ScalarImageToTextureFeaturesFilter<InputImageType> TextureFilterType;
     TextureFilterType::Pointer glcm = TextureFilterType::New();
 
     typedef TextureFilterType::TextureFeaturesFilterType   TextureFeaturesFilterType;
@@ -775,7 +528,7 @@ void CalcGlcmFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer
     glcm->SetMaskImage(maskImage);
     // glcm->FastCalculationsOn();
 
-    glcm->SetNumberOfBinsPerAxis(64);
+    glcm->SetNumberOfBinsPerAxis(NumberOfBins);
     glcm->SetPixelValueMinMax(inputMin, inputMax);
 
     glcm->FastCalculationsOff();
@@ -806,9 +559,9 @@ void CalcGlcmFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer
 }
 
 
-void CalcGlrmFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, InputPixelType inputMin, InputPixelType inputMax, double distMax, ostream &outfile)
+void CalcGlrmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer maskImage, InputPixelType inputMin, InputPixelType inputMax, double distMax, ostream &outfile)
 {
-    typedef itk::Statistics::ScalarImageToRunLengthFeaturesFilter<MaskImageType> RunLengthFilterType;
+    typedef itk::Statistics::ScalarImageToRunLengthFeaturesFilter<InputImageType> RunLengthFilterType;
     RunLengthFilterType::Pointer glrm = RunLengthFilterType::New();
 
     typedef RunLengthFilterType::RunLengthFeaturesFilterType RunLengthFeaturesFilterType;
@@ -836,7 +589,7 @@ void CalcGlrmFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer
     // glrm->FastCalculationsOn();
 
 
-    glrm->SetNumberOfBinsPerAxis(64);
+    glrm->SetNumberOfBinsPerAxis(NumberOfBins);
     glrm->SetPixelValueMinMax(inputMin, inputMax);
     glrm->SetDistanceValueMinMax(0, distMax);
 
@@ -866,6 +619,185 @@ void CalcGlrmFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer
         outfile << "StandardDeviationOf" << charactheristic << "= " << glrm->GetFeatureStandardDeviations()->GetElement(x) << endl;
     }
 
+}
+
+
+MaskImageType::Pointer StentRemoval(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, InputPixelType stentThreshold = 500)
+{
+	StructuringElementType structuringElement1;
+	structuringElement1.SetRadius(1);
+	structuringElement1.CreateStructuringElement();
+
+	StructuringElementType structuringElement3;
+	structuringElement3.SetRadius(3);
+	structuringElement3.CreateStructuringElement();
+
+	StructuringElementType structuringElement5;
+	structuringElement5.SetRadius(5);
+	structuringElement5.CreateStructuringElement();
+
+	StructuringElementType structuringElement10;
+	structuringElement10.SetRadius(10);
+	structuringElement10.CreateStructuringElement();
+
+#if 0 
+	ErodeFilterType::Pointer erodeFilter = ErodeFilterType::New();
+	erodeFilter->SetInput(maskImage);
+	erodeFilter->SetKernel(structuringElement3);
+	erodeFilter->SetErodeValue(maskValue);
+	erodeFilter->Update();
+
+	maskImage = erodeFilter->GetOutput();
+#endif
+
+
+	typedef itk::BinaryThresholdImageFilter< InputImageType, MaskImageType > BinaryThresholdfilterType;
+
+	BinaryThresholdfilterType::Pointer binaryThresholdfilter = BinaryThresholdfilterType::New();
+
+	binaryThresholdfilter->SetInput(inputImage);
+	binaryThresholdfilter->SetInsideValue(1);
+	binaryThresholdfilter->SetOutsideValue(0);
+	binaryThresholdfilter->SetLowerThreshold(500); // <- Main paraneter
+
+#if 0
+	 typedef itk::BinaryShapeKeepNObjectsImageFilter<MaskImageType > LabelOpeningType;
+
+	 LabelOpeningType::Pointer opening = LabelOpeningType::New();
+	 opening->SetInput( binaryThresholdfilter->GetOutput() );
+	 opening->SetBackgroundValue( 0 );
+	 opening->SetForegroundValue( maskValue );
+	 opening->SetNumberOfObjects( 1 );
+	 //opening->SetReverseOrdering( false );
+	 //opening->SetAttribute(100); //  extract the largest object  NUMBER_OF_PIXELS
+	 opening->Update();
+#endif
+
+	DilateFilterType::Pointer dilateFilter = DilateFilterType::New();
+	dilateFilter->SetInput(binaryThresholdfilter->GetOutput());
+	dilateFilter->SetKernel(structuringElement3);
+	dilateFilter->SetDilateValue(maskValue);
+	dilateFilter->Update();
+
+	typedef itk::Image<MaskPixelType, Dimension - 1> MaskImage2DType;
+
+	typedef itk::SliceBySliceImageFilter< MaskImageType, MaskImageType> SliceBySliceFilterType;
+	SliceBySliceFilterType::Pointer sliceBySliceFilter = SliceBySliceFilterType::New();
+
+	typedef itk::BinaryFillholeImageFilter< MaskImage2DType > I2LType;
+	I2LType::Pointer reconstruction = I2LType::New();
+	reconstruction->SetFullyConnected(true);
+	reconstruction->SetForegroundValue(maskValue);
+
+	sliceBySliceFilter->SetInput(dilateFilter->GetOutput());
+	sliceBySliceFilter->SetFilter(reconstruction);
+
+	sliceBySliceFilter->Update();
+
+
+	// remove stent area
+	typedef itk::SubtractImageFilter <MaskImageType, MaskImageType> SubtractImageFilterType;
+	SubtractImageFilterType::Pointer subtractFilter = SubtractImageFilterType::New();
+	subtractFilter->SetInput1(maskImage);
+	subtractFilter->SetInput2(sliceBySliceFilter->GetOutput());
+
+	typedef itk::AndImageFilter <MaskImageType> AndImageFilterType;
+	AndImageFilterType::Pointer andFilter = AndImageFilterType::New();
+	andFilter->SetInput1(maskImage);
+	andFilter->SetInput2(subtractFilter->GetOutput());
+	andFilter->Update();
+	maskImage = andFilter->GetOutput();
+
+	return maskImage;
+}
+
+int ExtractLargestAreaSlice(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, InputImage2DType::Pointer& input2DImage, MaskImage2DType::Pointer& mask2DImage)
+{
+	MaskImageType::RegionType maskRegion = maskImage->GetLargestPossibleRegion();
+	MaskImageType::IndexType start = maskRegion.GetIndex();
+	MaskImageType::SizeType size = maskRegion.GetSize();
+
+	const unsigned int numberofSlices = size[2];
+	size[2] = 0;
+
+
+	typedef itk::ExtractImageFilter< MaskImageType, MaskImage2DType > FilterType;
+	FilterType::Pointer filter = FilterType::New();
+	filter->SetDirectionCollapseToSubmatrix();
+
+	float maxArea = 0;
+	unsigned int maxSlice = 0;
+	for (unsigned int i = 0; i < numberofSlices; i++)
+	{
+		start[2] = i;
+
+		MaskImageType::RegionType desiredRegion;
+		desiredRegion.SetSize(size);
+		desiredRegion.SetIndex(start);
+
+		filter->SetExtractionRegion(desiredRegion);
+		filter->SetInput(maskImage);
+		filter->Update();
+
+		typedef itk::ImageRegionConstIterator<MaskImage2DType> maskImage2DIteratorType;
+		maskImage2DIteratorType maskImage2Dit(filter->GetOutput(), filter->GetOutput()->GetRequestedRegion());
+
+		float curArea = 0;
+		maskImage2Dit.GoToBegin();
+		while (!maskImage2Dit.IsAtEnd())
+		{
+			if (maskImage2Dit.Get() == maskValue) ++curArea;
+			++maskImage2Dit;
+		}
+		if (curArea > maxArea)
+		{
+			maxArea = curArea;
+			maxSlice = i;
+		}
+		cout << i << ": max area " << maxArea << ", current area " << curArea << endl;
+	}
+
+
+	// applying the slice extraction for inputImage
+	start[2] = maxSlice;
+
+	MaskImageType::RegionType desiredRegion;
+	desiredRegion.SetSize(size);
+	desiredRegion.SetIndex(start);
+
+	filter->SetExtractionRegion(desiredRegion);
+	filter->SetInput(maskImage);
+	filter->Update();
+	mask2DImage = filter->GetOutput();
+
+
+	// applying the slice extraction for inputImage
+	{
+		//InputImageType::RegionType inputRegion = inputImage->GetLargestPossibleRegion();
+		//InputImageType::IndexType start = inputRegion.GetIndex();
+		//InputImageType::SizeType size = inputRegion.GetSize();
+		//
+		//size[2] = 0;
+		//start[2] = maxSlice;
+
+		typedef itk::ExtractImageFilter< InputImageType, InputImage2DType > FilterType;
+		FilterType::Pointer filter = FilterType::New();
+		//filter->InPlaceOn();
+		filter->SetDirectionCollapseToSubmatrix();
+
+		cout << start << size << endl;
+
+		InputImageType::RegionType desiredRegion;
+		desiredRegion.SetSize(size);
+		desiredRegion.SetIndex(start);
+
+		filter->SetExtractionRegion(desiredRegion);
+		filter->SetInput(inputImage);
+		filter->Update();
+		input2DImage = filter->GetOutput();
+	}
+
+	return 0;
 }
 
 int main( int argc, char *argv[] )
@@ -933,26 +865,60 @@ int main( int argc, char *argv[] )
     InputImageType::RegionType inputRegion;
     MaskImageType::RegionType maskRegion;
 
-    MaskImageType::Pointer maskImage = GetMaskImage(labelImage, selectedLabelValue);
-    maskRegion = maskImage->GetRequestedRegion();
+    MaskImageType::Pointer maskImage = MaskImageType::New();
+    maskImage->SetRegions( labelImage->GetRequestedRegion() );
+    maskImage->CopyInformation( labelImage );
+    maskImage->Allocate();
 
+    maskImage = GetMaskImage(labelImage, selectedLabelValue);
+    maskRegion = GetRoi(maskImage);
+    ExpandRoi(maskImage, maskRegion);
     BoundingCheck(maskImage, inputImage, maskRegion, inputRegion);
 
     MaskImageType::IndexType roiStart;
     MaskImageType::IndexType roiEnd;
 
-    RoiRegionToIndex(maskRegion, roiStart, roiEnd);
+    RegionToIndex(maskRegion, roiStart, roiEnd);
 
-    inputImage = ApplyRoi(inputImage, inputRegion);
-    maskImage = ApplyRoi(maskImage, maskRegion);
+    inputImage = ApplyRoi<InputImageType>(inputImage, inputRegion);
+    maskImage = ApplyRoi<MaskImageType>(maskImage, maskRegion);
 
+	inputImage->SetSpacing(maskImage->GetSpacing());
     inputImage->SetOrigin(maskImage->GetOrigin());
     inputImage->SetDirection(maskImage->GetDirection());
 
-    InternalImageType::Pointer inputImageFloat   = InternalImageType::New();
-    inputImageFloat->SetRegions( inputImage->GetRequestedRegion() );
-    inputImageFloat->CopyInformation( inputImage );
-    inputImageFloat->Allocate();
+    InternalImageType::Pointer maskImageFloat;
+    typedef itk::CastImageFilter<MaskImageType,InputImageType> CastToInputFilterType;
+    CastToInputFilterType::Pointer toInputFilter = CastToInputFilterType::New();
+    toInputFilter->SetInput(maskImage);
+    toInputFilter->Update();
+    maskImageFloat = toInputFilter->GetOutput();
+
+
+ // InternalImageType::Pointer inputImageFloat = InternalImageType::New();
+ //    inputImageFloat->SetRegions( inputImage->GetRequestedRegion() );
+ //    inputImageFloat->CopyInformation( inputImage );
+ //    inputImageFloat->Allocate();
+
+ //    {
+ //        // Changing the data type of Input Image (unsigned int)  to float
+
+ //        typedef itk::ImageRegionIterator< InternalImageType>       inputImageIteratorFloatType;
+ //        inputImageIteratorFloatType inputImageFloatIt( inputImageFloat, inputImageFloat->GetRequestedRegion() );
+
+ //        typedef itk::ImageRegionConstIterator< InputImageType>       inputImageIteratorType;
+ //        inputImageIteratorType inputImageit( inputImage, inputImage->GetRequestedRegion() );
+
+ //        inputImageit.GoToBegin();
+ //        inputImageFloatIt.GoToBegin();
+
+ //        while ( !inputImageit.IsAtEnd() )
+ //        {
+ //            inputImageFloatIt.Set(  inputImageit.Get() );
+ //            ++inputImageit;
+ //            ++inputImageFloatIt;
+ //        }
+ //    }
 
 
     // Output file open
@@ -964,50 +930,54 @@ int main( int argc, char *argv[] )
     }
 
 #if 0
-    {
-        // Changing the data type of Input Image (unsigned int)  to float
+    
 
-        typedef itk::ImageRegionIterator< InternalImageType>       inputImageIteratorFloatType;
-        inputImageIteratorFloatType inputImageFloatIt( inputImageFloat, inputImageFloat->GetRequestedRegion() );
-
-        typedef itk::ImageRegionConstIterator< InputImageType>       inputImageIteratorType;
-        inputImageIteratorType inputImageit( inputImage, inputImage->GetRequestedRegion() );
-
-        inputImageit.GoToBegin();
-        inputImageFloatIt.GoToBegin();
-
-        while ( !inputImageit.IsAtEnd() )
-        {
-            inputImageFloatIt.Set(  inputImageit.Get() );
-            ++inputImageit;
-            ++inputImageFloatIt;
-        }
-    }
-
-#endif
 
     // For Island Removing
     {
-        //typedef itk::LabelShapeKeepNObjectsImageFilter< MaskImageType > LabelOpeningType;
+        typedef itk::LabelShapeKeepNObjectsImageFilter< MaskImageType > LabelOpeningType;
+
         typedef itk::BinaryShapeKeepNObjectsImageFilter<MaskImageType > LabelOpeningType;
 
         LabelOpeningType::Pointer opening = LabelOpeningType::New();
-        opening->SetInput( maskImage );
+        opening->SetInput( Thresholdfilter->GetOutput() );
         opening->SetBackgroundValue( 0 );
         opening->SetForegroundValue( 1 );
         opening->SetNumberOfObjects( 1 );
-        //opening->FullyConnectedOn();
         //opening->SetReverseOrdering( false );
-        opening->SetAttribute(LabelOpeningType::LabelObjectType::NUMBER_OF_PIXELS); //  extract the largest object  NUMBER_OF_PIXELS = 100
+        opening->SetAttribute( 100); //  extract the largest object  NUMBER_OF_PIXELS
         opening->Update();
-        maskImage = opening->GetOutput();
     }
 
-    // typedef itk::CastImageFilter<InputImageType, LabelImageType > SUVCastFilterType;
-    // SUVCastFilterType::Pointer SUVCaster   = SUVCastFilterType::New();
+	typedef itk::CastImageFilter<InputImageType, LabelImageType > SUVCastFilterType;
+	SUVCastFilterType::Pointer SUVCaster   = SUVCastFilterType::New();
 
-    // SUVCaster->SetInput( inputImage );
-    // SUVCaster->Update();
+	SUVCaster->SetInput( inputImage );
+	SUVCaster->Update();
+#endif
+
+
+#if 0
+	{
+        MaskWriterType::Pointer binaryWriter = MaskWriterType::New();
+
+        binaryWriter->SetFileName("test0.dcm");
+        binaryWriter->SetInput(maskImage);
+        binaryWriter->Update();
+	}
+#endif   
+    
+
+	//maskImage = StentRemoval(inputImage, maskImage, 500);
+
+    // extract the slice having the largest area 
+	MaskImage2DType::Pointer mask2DImage;
+	InputImage2DType::Pointer input2DImage;
+	ExtractLargestAreaSlice(inputImage, maskImage, input2DImage, mask2DImage);
+    CalcShapeAndIntensityFeatures(input2DImage, mask2DImage, outfile);
+
+
+
 
     /////////////////////////////////////////////////////////////////
     // Compute Intensity Features for three SUV images using itkLabelStatisticsImageFilter /////////
@@ -1015,136 +985,43 @@ int main( int argc, char *argv[] )
     InputPixelType inputMin;
     InputPixelType inputMax;
 
-    if(1) CalcIntensityFeatures(inputImage, maskImage, inputMin, inputMax, outfile);
+    CalcIntensityFeatures(inputImage, maskImage, inputMin, inputMax, outfile);
 
 
 
     /////////////////////////////////////////////////////////////////////
     // Compute Geometry feature using LabelGeometryImageFilter  ////
     /////////////////////////////////////////////////////////////////////
-    if(1) CalcGeometryFeatures(inputImage, maskImage, outfile);
+    CalcGeometryFeatures(inputImage, maskImage, outfile);
 
 
-
-    
-    ////////////////////////////////////////////////////////////////////
-    ///// Compute Feature for the Input images using ScalarImageToRunLengthFeaturesFilter /////
-    ////////////////////////////////////////////////////////////////////
-    if(1)
-    {
-        MaskImageType::PointType pointMin;
-        MaskImageType::PointType pointMax;
-
-        maskImage->TransformIndexToPhysicalPoint(roiStart, pointMin);
-        maskImage->TransformIndexToPhysicalPoint(roiEnd, pointMax);
-
-        double distMax = pointMin.EuclideanDistanceTo(pointMax);
-
-        CalcGlrmFeatures(inputImage, maskImage, inputMin, inputMax, distMax, outfile);
-    }
-
-
-    // extract the largest area 2D slice
-{
-    typedef itk::ExtractImageFilter< MaskImageType, MaskImage2DType > FilterType;
-    FilterType::Pointer filter = FilterType::New();
-    filter->InPlaceOn();
-    filter->SetDirectionCollapseToSubmatrix();
-
-    MaskImageType::RegionType maskRegion = maskImage->GetLargestPossibleRegion();
-    MaskImageType::IndexType start = maskRegion.GetIndex();
-    MaskImageType::SizeType size = maskRegion.GetSize();
-
-    const unsigned int numberofSlices = size[2];
-    size[2] = 0;
-
-    float maxArea = 0;
-    unsigned int maxSlice = 0;
-    MaskImage2DType::Pointer mask2DImage = MaskImage2DType::New();
-    for(unsigned int i = 0; i < numberofSlices; i++)
-    {
-        start[2] = i;
-
-        MaskImageType::RegionType desiredRegion;
-        desiredRegion.SetSize(size);
-        desiredRegion.SetIndex(start);
-
-        filter->SetExtractionRegion( desiredRegion );
-        filter->SetInput(maskImage);
-        filter->Update();
-
-        typedef itk::ImageRegionConstIterator<MaskImage2DType> maskImage2DIteratorType;
-        maskImage2DIteratorType maskImage2Dit(filter->GetOutput(), filter->GetOutput()->GetRequestedRegion() );
-
-        float curArea = 0;
-        maskImage2Dit.GoToBegin();
-        while ( !maskImage2Dit.IsAtEnd() )
-        {
-            if(maskImage2Dit.Get() > 0) ++curArea;
-            ++maskImage2Dit;
-        }
-        if(curArea > maxArea)
-        {
-            maxArea = curArea;
-            maxSlice = i;
-        }
-        cout << curArea << " ";
-    }
-    cout << ": max area " << maxArea << endl;
-
-    start[2] = maxSlice;
-
-    MaskImageType::RegionType desiredRegion;
-    desiredRegion.SetSize(size);
-    desiredRegion.SetIndex(start);
-
-    filter->SetExtractionRegion( desiredRegion );
-    filter->SetInput(maskImage);
-    filter->Update();
-    mask2DImage = filter->GetOutput();
-
-
-    InputImage2DType::Pointer input2DImage = InputImage2DType::New();
-    {
-        typedef itk::ExtractImageFilter< InputImageType, InputImage2DType > FilterType;
-        FilterType::Pointer filter = FilterType::New();
-        filter->InPlaceOn();
-        filter->SetDirectionCollapseToSubmatrix();
-
-        InputImageType::RegionType inputRegion = inputImage->GetLargestPossibleRegion();
-        InputImageType::IndexType start = inputRegion.GetIndex();
-        InputImageType::SizeType size = inputRegion.GetSize();
-        size[2] = 0;
-        start[2] = maxSlice;
-
-        cout << start << size << endl;
-
-        InputImageType::RegionType desiredRegion;
-        desiredRegion.SetSize(size);
-        desiredRegion.SetIndex(start);
-
-        filter->SetExtractionRegion( desiredRegion );
-        filter->SetInput(inputImage);
-        filter->Update();
-        input2DImage = filter->GetOutput();
-    }
-
-    if(1) CalcShapeAndIntensityFeatures(input2DImage, mask2DImage, outfile);
-}
 
     ///////////////////////////////////////////////////////////////////////////
     // Compute shape and intensity feature uisng LabelMap   ////////////////////
     ////////////////////////////////////////////////////////////////////////////
-    if(1) CalcShapeAndIntensityFeatures(inputImage, maskImage, outfile);
+    CalcShapeAndIntensityFeatures(inputImage, maskImage, outfile);
 
 
     ////////////////////////////////////////////////////////////////////
     ///// Compute Feature for the Input images using ScalarImageToTextureFeaturesFilter /////
     ////////////////////////////////////////////////////////////////////
-    if(1) CalcGlcmFeatures(inputImage, maskImage, inputMin, inputMax, outfile);
+    CalcGlcmFeatures(inputImage, maskImageFloat, inputMin, inputMax, outfile);
 
 
 
+    ////////////////////////////////////////////////////////////////////
+    ///// Compute Feature for the Input images using ScalarImageToRunLengthFeaturesFilter /////
+    ////////////////////////////////////////////////////////////////////
+
+    MaskImageType::PointType pointMin;
+    MaskImageType::PointType pointMax;
+
+    maskImage->TransformIndexToPhysicalPoint(roiStart, pointMin);
+    maskImage->TransformIndexToPhysicalPoint(roiEnd, pointMax);
+
+    double distMax = pointMin.EuclideanDistanceTo(pointMax);
+
+    CalcGlrmFeatures(inputImage, maskImageFloat, inputMin, inputMax, distMax, outfile);
 
 #if 0
         binaryWriter->SetFileName("test1.dcm");
