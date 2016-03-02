@@ -232,7 +232,7 @@ void BoundingCheck(MaskImageType::Pointer maskImage, InputImageType::Pointer inp
         // Mask
         osize[n] = isize[n];
     
-        maskCenter[n] = static_cast<OutputPixelType>(round(isize[n] / 2));
+        maskCenter[n] = static_cast<MaskImageType::IndexValueType>(round(isize[n] / 2));
     }
 
     cout << "maskStart " << maskStart << ", maskEnd " << maskStart + maskSize << "" << endl;
