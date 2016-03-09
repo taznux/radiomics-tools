@@ -928,27 +928,29 @@ int main( int argc, char *argv[] )
         cerr << "Can't open output file " << featureFileName << endl;
         exit(1);
     }
-
-#if 0
-    
+  
 
 
     // For Island Removing
+    MaskImageType::Pointer maskImageIslandRemoved;
     {
-        typedef itk::LabelShapeKeepNObjectsImageFilter< MaskImageType > LabelOpeningType;
+        //typedef itk::LabelShapeKeepNObjectsImageFilter< MaskImageType > LabelOpeningType;
 
         typedef itk::BinaryShapeKeepNObjectsImageFilter<MaskImageType > LabelOpeningType;
 
         LabelOpeningType::Pointer opening = LabelOpeningType::New();
-        opening->SetInput( Thresholdfilter->GetOutput() );
+        opening->SetInput( maskImage );
         opening->SetBackgroundValue( 0 );
         opening->SetForegroundValue( 1 );
         opening->SetNumberOfObjects( 1 );
         //opening->SetReverseOrdering( false );
-        opening->SetAttribute( 100); //  extract the largest object  NUMBER_OF_PIXELS
+        opening->SetAttribute(LabelOpeningType::LabelObjectType::NUMBER_OF_PIXELS); //  extract the largest object  NUMBER_OF_PIXELS
         opening->Update();
+
+        maskImageIslandRemoved = opening->GetOutput();
     }
 
+#if 0
 	typedef itk::CastImageFilter<InputImageType, LabelImageType > SUVCastFilterType;
 	SUVCastFilterType::Pointer SUVCaster   = SUVCastFilterType::New();
 
@@ -995,11 +997,10 @@ int main( int argc, char *argv[] )
     CalcGeometryFeatures(inputImage, maskImage, outfile);
 
 
-
     ///////////////////////////////////////////////////////////////////////////
     // Compute shape and intensity feature uisng LabelMap   ////////////////////
     ////////////////////////////////////////////////////////////////////////////
-    CalcShapeAndIntensityFeatures(inputImage, maskImage, outfile);
+    CalcShapeAndIntensityFeatures(inputImage, maskImageIslandRemoved, outfile);
 
 
     ////////////////////////////////////////////////////////////////////
