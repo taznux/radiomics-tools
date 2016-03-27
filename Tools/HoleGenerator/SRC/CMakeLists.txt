@@ -1,4 +1,4 @@
-PROJECT (FeatureExtraction)
+PROJECT (HoleGenerator)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
 #------------------------------------------------ 
@@ -18,15 +18,15 @@ ELSE(ITK_FOUND)
     "Cannot build Application without ITK. Please set ITK_DIR.")
 ENDIF(ITK_FOUND)
 
-INCLUDE_DIRECTORIES(../../ITKUtils/SRC)
-FIND_LIBRARY(ITKUTILS_LIB ITKUtils ../../ITKUtils/LIB/ REQUIRED)
+INCLUDE_DIRECTORIES(../../../Tools/ITKUtils/SRC)
+FIND_LIBRARY(ITKUTILS_LIB ITKUtils ../../../Tools/ITKUtils/LIB/ REQUIRED)
 
-ADD_EXECUTABLE(FeatureExtraction
-    FeatureExtraction.cxx
+ADD_EXECUTABLE(HoleGenerator
+    HoleGenerator.cxx
 )
 
 
 SET (BUILD_SHARED_LIBS OFF)
 SET (CMAKE_VERBOSE_MAKEFILE OFF)
 
-TARGET_LINK_LIBRARIES(FeatureExtraction ${ITK_LIBRARIES} ${ITKUTILS_LIB})
+TARGET_LINK_LIBRARIES(HoleGenerator ${ITK_LIBRARIES} ${ITKUTILS_LIB})
