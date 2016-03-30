@@ -1,23 +1,24 @@
-PROJECT(itkReadDICOMRT)
+PROJECT(RTConverter)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
-# This is needed for testing with ctest
-ENABLE_TESTING()
+#------------------------------------------------ 
+# ITK
+#------------------------------------------------ 
 
-cmake_minimum_required(VERSION 2.6)
+SET(ITK_DIR "/data/research/lu_lab/work/wchoi/software/ITK460-build")
+IF(WIN32)
+  SET(ITK_DIR "C:/Program Files/ITK/lib/cmake/ITK-4.8")
+ENDIF(WIN32)
 
 FIND_PACKAGE(ITK)
 IF(ITK_FOUND)
-INCLUDE(${ITK_USE_FILE})
+  INCLUDE(${ITK_USE_FILE})
 ELSE(ITK_FOUND)
-MESSAGE(FATAL_ERROR
-"ITK not found. Please set ITK_DIR.")
+  MESSAGE(FATAL_ERROR
+    "Cannot build Application without ITK. Please set ITK_DIR.")
 ENDIF(ITK_FOUND)
 
-
-SET(INPUTDATA ${PROJECT_SOURCE_DIR}/testDICOMRT )
-
-SET(CurrentExe "itkReadDICOMRT")
-ADD_EXECUTABLE(${CurrentExe} itkReadDICOMRT.cxx) 
+SET(CurrentExe "RTConverter")
+ADD_EXECUTABLE(${CurrentExe} RTConverter.cxx) 
 TARGET_LINK_LIBRARIES(${CurrentExe} ${ITK_LIBRARIES} ) 
 
-ADD_TEST(ReadDicomStructTest ${CurrentExe} ${INPUTDATA} ${INPUTDATA}/RS.1.2.246.352.71.4.886768594.5257.20090622110825.dcm testRT)
