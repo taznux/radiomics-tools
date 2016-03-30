@@ -43,3 +43,4 @@ CMakeCache.txt
 *.pdf
 *.mexw64
 *.mexa64
+*.sqlite
