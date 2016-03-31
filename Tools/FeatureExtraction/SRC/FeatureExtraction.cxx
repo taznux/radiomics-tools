@@ -802,21 +802,58 @@ int ExtractLargestAreaSlice(InputImageType::Pointer inputImage, MaskImageType::P
 
 int main( int argc, char *argv[] )
 {
+    bool is2DShapeIntensity = false; // 2
+    bool isIntensity = false;        // i
+    bool isShapeIntensity = false;   // s
+    bool isGeometry = false;         // g
+    bool isGLCM = false;             // c
+    bool isGLRM = false;             // r
+    string featureSelect = "2isgcr";
 
 
     if ( argc < 3)
     {
         cerr << "Missing Parameters " << endl;
         cerr << "Usage = " << argv[0];
-        cerr << " InputImage LabelImage FeatureFile Label={1}" << endl;
+        cerr << " InputImage LabelImage FeatureFile Label={1} FeatureSelect={2isgcr}" << endl;
+        cerr << " 2 - 2DShapeIntensity, i - Intensity, s - Shape Intensity, g - Geometry, c - GLCM, r - GLRM" << endl;
         return EXIT_FAILURE;
     }
-
 
     LabelPixelType selectedLabelValue = maskValue;
     if (argc > 4)
     {
         selectedLabelValue = atoi(argv[4]);
+    }
+
+    if (argc > 5)
+    {
+        featureSelect = argv[5];
+    }
+
+    for(int i = 0; i < featureSelect.length(); i++)
+    {
+        switch(featureSelect[i])
+        {
+            case '2':
+                is2DShapeIntensity = true; // 2
+                break;
+            case 'i':
+                isIntensity = true;        // i
+                break;
+            case 's':
+                isShapeIntensity = true;   // s
+                break;
+            case 'g':
+                isGeometry = true;         // g
+                break;
+            case 'c':
+                isGLCM = true;             // c
+                break;
+            case 'r':
+                isGLRM = true;             // r
+                break;
+        }
     }
 
     string inputImageName = argv[1];
@@ -972,13 +1009,17 @@ int main( int argc, char *argv[] )
 
 	//maskImage = StentRemoval(inputImage, maskImage, 500);
 
-    // extract the slice having the largest area 
-	MaskImage2DType::Pointer mask2DImage;
-	InputImage2DType::Pointer input2DImage;
-	ExtractLargestAreaSlice(inputImage, maskImage, input2DImage, mask2DImage);
-    CalcShapeAndIntensityFeatures(input2DImage, mask2DImage, outfile);
-
-
+    ///////////////////////////////////////////////////////////////////////////
+    // Compute 2D shape and intensity feature uisng LabelMap   ////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    if(is2DShapeIntensity)
+    {
+        // extract the slice having the largest area 
+        MaskImage2DType::Pointer mask2DImage;
+        InputImage2DType::Pointer input2DImage;
+        ExtractLargestAreaSlice(inputImage, maskImage, input2DImage, mask2DImage);
+        CalcShapeAndIntensityFeatures(input2DImage, mask2DImage, outfile);
+    }
 
 
     /////////////////////////////////////////////////////////////////
@@ -986,43 +1027,47 @@ int main( int argc, char *argv[] )
     ///////////////////////////////////////////////////////////////
     InputPixelType inputMin;
     InputPixelType inputMax;
-
-    CalcIntensityFeatures(inputImage, maskImage, inputMin, inputMax, outfile);
-
+    if(isIntensity)
+        CalcIntensityFeatures(inputImage, maskImage, inputMin, inputMax, outfile);
 
 
     /////////////////////////////////////////////////////////////////////
     // Compute Geometry feature using LabelGeometryImageFilter  ////
     /////////////////////////////////////////////////////////////////////
-    CalcGeometryFeatures(inputImage, maskImage, outfile);
+    if(isGeometry)
+        CalcGeometryFeatures(inputImage, maskImage, outfile);
 
 
     ///////////////////////////////////////////////////////////////////////////
     // Compute shape and intensity feature uisng LabelMap   ////////////////////
     ////////////////////////////////////////////////////////////////////////////
-    CalcShapeAndIntensityFeatures(inputImage, maskImageIslandRemoved, outfile);
+    if(isShapeIntensity)
+        CalcShapeAndIntensityFeatures(inputImage, maskImageIslandRemoved, outfile);
 
 
     ////////////////////////////////////////////////////////////////////
     ///// Compute Feature for the Input images using ScalarImageToTextureFeaturesFilter /////
     ////////////////////////////////////////////////////////////////////
-    CalcGlcmFeatures(inputImage, maskImageFloat, inputMin, inputMax, outfile);
+    if(isGLCM)
+        CalcGlcmFeatures(inputImage, maskImageFloat, inputMin, inputMax, outfile);
 
 
 
     ////////////////////////////////////////////////////////////////////
     ///// Compute Feature for the Input images using ScalarImageToRunLengthFeaturesFilter /////
     ////////////////////////////////////////////////////////////////////
+    if(isIntensity && isGLRM)
+    {
+        MaskImageType::PointType pointMin;
+        MaskImageType::PointType pointMax;
 
-    MaskImageType::PointType pointMin;
-    MaskImageType::PointType pointMax;
+        maskImage->TransformIndexToPhysicalPoint(roiStart, pointMin);
+        maskImage->TransformIndexToPhysicalPoint(roiEnd, pointMax);
 
-    maskImage->TransformIndexToPhysicalPoint(roiStart, pointMin);
-    maskImage->TransformIndexToPhysicalPoint(roiEnd, pointMax);
+        double distMax = pointMin.EuclideanDistanceTo(pointMax);
 
-    double distMax = pointMin.EuclideanDistanceTo(pointMax);
-
-    CalcGlrmFeatures(inputImage, maskImageFloat, inputMin, inputMax, distMax, outfile);
+        CalcGlrmFeatures(inputImage, maskImageFloat, inputMin, inputMax, distMax, outfile);
+    }
 
 #if 0
         binaryWriter->SetFileName("test1.dcm");
