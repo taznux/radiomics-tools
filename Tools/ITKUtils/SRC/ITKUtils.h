@@ -373,6 +373,7 @@ void RegionToIndex(MaskImageType::RegionType, MaskImageType::IndexType &, MaskIm
 MaskImageType::RegionType GetRoi(MaskImageType::Pointer);
 void ExpandRoi(MaskImageType::Pointer, MaskImageType::RegionType &, const double objectSize = 10);
 void BoundingCheck(MaskImageType::Pointer, InputImageType::Pointer, MaskImageType::RegionType &, InputImageType::RegionType &);
+void BoundingCheck(MaskImageType::Pointer, LabelImageType::Pointer, MaskImageType::RegionType &, InputImageType::RegionType &);
 
 MaskImageType::RegionType ReadROI(string);
 void WriteROI(MaskImageType::RegionType, string);
