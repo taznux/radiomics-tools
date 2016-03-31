@@ -247,6 +247,57 @@ void BoundingCheck(MaskImageType::Pointer maskImage, InputImageType::Pointer inp
     maskRegion.SetSize(osize);
 }
 
+void BoundingCheck(MaskImageType::Pointer maskImage, LabelImageType::Pointer inputImage, MaskImageType::RegionType &maskRegion, InputImageType::RegionType &inputRegion)
+{
+	RegionType inputImageRegion = inputImage->GetLargestPossibleRegion();
+	SizeType inputImageSize = inputImageRegion.GetSize();
+
+	MaskImageType::IndexType maskStart = maskRegion.GetIndex();
+	MaskImageType::SizeType maskSize = maskRegion.GetSize();
+	MaskImageType::IndexType maskCenter;
+
+	LabelImageType::IndexType istart;
+	LabelImageType::SizeType isize;
+
+	MaskImageType::IndexType ostart;
+	MaskImageType::SizeType osize;
+
+	MaskImageType::PointType ptRoiStart;
+	maskImage->TransformIndexToPhysicalPoint(maskStart, ptRoiStart);
+	inputImage->TransformPhysicalPointToIndex(ptRoiStart, istart);
+
+	for (unsigned n = 0; n < Dimension; n++)
+	{
+		isize[n] = maskSize[n];
+		ostart[n] = maskStart[n];
+
+		// Input image
+		if (istart[n] < 0)
+		{
+			ostart[n] = ostart[n] - istart[n];
+			isize[n] = isize[n] + istart[n];
+			istart[n] = 0;
+		}
+		isize[n] = (static_cast<unsigned int>(isize[n] + istart[n]) <= inputImageSize[n]) ?
+			isize[n] : (inputImageSize[n] - istart[n] - 1);
+		// Mask
+		osize[n] = isize[n];
+
+		maskCenter[n] = static_cast<MaskImageType::IndexValueType>(round(isize[n] / 2));
+	}
+
+	cout << "maskStart " << maskStart << ", maskEnd " << maskStart + maskSize << "" << endl;
+	cout << "istart " << istart << ", isize " << isize << "" << endl;
+	cout << "ostart " << ostart << ", osize " << osize << "" << endl;
+	cout << "maskCenter " << maskCenter << endl;
+
+	inputRegion.SetIndex(istart);
+	inputRegion.SetSize(isize);
+
+	maskRegion.SetIndex(ostart);
+	maskRegion.SetSize(osize);
+}
+
 MaskImageType::Pointer unionImages(vector<MaskImageType::Pointer> inputMaskImages)
 {
     MaskImageType::Pointer outputMaskImage = MaskImageType::New();
