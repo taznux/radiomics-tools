@@ -848,9 +848,11 @@ int main( int argc, char *argv[] )
                 isGeometry = true;         // g
                 break;
             case 'c':
+                isIntensity = true;        // c needs i
                 isGLCM = true;             // c
                 break;
             case 'r':
+                isIntensity = true;        // r needs i
                 isGLRM = true;             // r
                 break;
         }
@@ -1048,7 +1050,7 @@ int main( int argc, char *argv[] )
     ////////////////////////////////////////////////////////////////////
     ///// Compute Feature for the Input images using ScalarImageToTextureFeaturesFilter /////
     ////////////////////////////////////////////////////////////////////
-    if(isGLCM)
+    if(isIntensity && isGLCM)
         CalcGlcmFeatures(inputImage, maskImageFloat, inputMin, inputMax, outfile);
 
 
