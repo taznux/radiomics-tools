@@ -3,7 +3,7 @@ project(GrowCutSegmentation)
 #------------------------------------------------ 
 # ITK
 #------------------------------------------------ 
-SET(ITK_DIR "/data/research/lu_lab/work/wchoi/software/ITK460-build")
+SET(ITK_DIR "/data/research/lu_lab/work/wchoi/software/ITK490-build")
 IF(WIN32)
   SET(ITK_DIR "C:/Program Files/ITK/lib/cmake/ITK-4.8")
 ENDIF(WIN32)

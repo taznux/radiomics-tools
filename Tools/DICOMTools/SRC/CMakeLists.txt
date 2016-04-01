@@ -11,6 +11,7 @@ IF(WIN32)
   SET(Boost_LIBRARY_DIR "C:/local/boost_1_59_0/lib")
 ENDIF(WIN32)
 
+SET(ITK_DIR "/data/research/lu_lab/work/wchoi/software/ITK490-build")
 FIND_PACKAGE(ITK)
 IF(ITK_FOUND)
   INCLUDE(${ITK_USE_FILE})
