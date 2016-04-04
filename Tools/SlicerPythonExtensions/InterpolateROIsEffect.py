@@ -1,12 +1,9 @@
 import os
-from __main__ import vtk
-from __main__ import ctk
-from __main__ import qt
-from __main__ import slicer
-from EditorLib.EditOptions import EditOptions
-from EditorLib import EditorLib
-import EditorLib.Effect as Effect
-import EditorLib.MorphologyEffect as MorphologyEffect
+import vtk
+import qt
+import ctk
+import slicer
+from EditorLib import *
 
 #########################################################
 #
@@ -25,7 +22,7 @@ comment = """
 # InterpolateROIsEffectOptions - see Effect for superclasses
 #
 
-class InterpolateROIsEffectOptions(MorphologyEffect.MorphologyEffectOptions):
+class InterpolateROIsEffectOptions(EditorLib.MorphologyEffectOptions):
   """ InterpolateROIsEffect-specfic gui
   """
 
@@ -157,7 +154,7 @@ class InterpolateROIsEffectOptions(MorphologyEffect.MorphologyEffectOptions):
 # InterpolateROIsEffectTool
 #
 
-class InterpolateROIsEffectTool(MorphologyEffect.MorphologyEffectTool):
+class InterpolateROIsEffectTool(EditorLib.MorphologyEffectTool):
   """
   One instance of this will be created per-view when the effect
   is selected.  It is responsible for implementing feedback and
@@ -180,7 +177,7 @@ class InterpolateROIsEffectTool(MorphologyEffect.MorphologyEffectTool):
 # InterpolateROIsEffectLogic
 #
 
-class InterpolateROIsEffectLogic(MorphologyEffect.MorphologyEffectLogic):
+class InterpolateROIsEffectLogic(EditorLib.MorphologyEffectLogic):
   """
   This class contains helper methods for a given effect
   type.  It can be instanced as needed by an InterpolateROIsEffectTool
@@ -259,7 +256,7 @@ class InterpolateROIsEffectLogic(MorphologyEffect.MorphologyEffectLogic):
 # The InterpolateROIsEffect class definition
 #
 
-class InterpolateROIsEffectExtension(MorphologyEffect.MorphologyEffect):
+class InterpolateROIsEffectExtension(EditorLib.MorphologyEffect):
   """Organizes the Options, Tool, and Logic classes into a single instance
   that can be managed by the EditBox
   """
