@@ -106,11 +106,17 @@ int main( int argc, char *argv[] )
     }
 
     bool isTumorOnly = 0;
+    bool isExpand = 0;
     if (argc > 5)
     {
         cout << argv[5] << endl;
         if(strcmp(argv[5],"T")==0)
             isTumorOnly = 1;
+        if(strcmp(argv[5],"TE")==0)
+        {
+            isTumorOnly = 1;
+            isExpand = 1;
+        }
     }
 
 
@@ -343,9 +349,10 @@ int main( int argc, char *argv[] )
 
         for (tumor.GoToBegin(), tumorOut.GoToBegin(), out.GoToBegin(); !tumor.IsAtEnd(); ++tumor, ++tumorOut, ++out)
         {
-            if(tumor.Get() ==0 && tumorOut.Get() > 0 )
+            if((isExpand == 0 && tumor.Get() ==0 && tumorOut.Get() > 0)
+                || (isExpand==1 && tumorOut.Get() > 0))
             {
-                cout << "T ";
+                //cout << "T ";
                 out.Set(307);
             }
         }
