@@ -1,24 +1,25 @@
-import csv
-from collections import defaultdict
+import pandas
 
-metadata = defaultdict(list)
-
+metadata = pandas.DataFrame()
 
 def load_metadata(metadata_path):
+    global metadata
     # load metadata
-    f = open(metadata_path, 'r')
-    nodule_info = csv.DictReader(f.read().splitlines(), dialect='excel')
-    for n in nodule_info:
-        for (k, v) in n.items():
-            metadata[k].append(v)
+    metadata = pandas.read_csv(metadata_path)
+    metadata.set_index(['No.'], inplace=True)
+    #print(metadata)
 
 
-def get(col, pid):
+def getPatient(pid):
     res = ''
+    #print(metadata)
     try:
-        idx = metadata['PID'].index(pid)
-        res = metadata[col][idx]
-    except ValueError as e:
-        print(e)
+        df = metadata.loc[metadata['PID'] == pid]
+        res = df.to_dict('index')
+
+        #print(res)
+
+    except KeyError as e:
+        print('KeyError: '+str(e))
 
     return res
