@@ -44,3 +44,5 @@ CMakeCache.txt
 *.mexw64
 *.mexa64
 *.sqlite
+
+*.gitconfig
