@@ -2,8 +2,6 @@ DICOM
 software
 Documents
 References
-Ming
-/Projects/BolusShaping/*.lst
 LIB
 BIN
 DATA
@@ -13,10 +11,10 @@ test*
 tmp*
 CMakeFiles
 CMakeCache.txt
+.idea
 .DS_Store
 .Rproj.user
 .RData
-.idea
 *~
 *.nrrd
 *.dcm
@@ -37,12 +35,4 @@ CMakeCache.txt
 *.log
 *.csv
 ~*
-*.Rhistory
-*.xlsx
-*.RData
-*.pdf
-*.mexw64
-*.mexa64
-*.sqlite
-
-*.gitconfig
+.ruffus_history.sqlite*

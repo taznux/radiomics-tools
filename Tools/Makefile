@@ -1,5 +1,5 @@
 all:
-	@make -C ITKUtils 
+	@make -C ITKUtils
 	@make -C DICOMTools
 	@make -C ContourTools
 	@make -C FeatureExtraction
@@ -13,4 +13,3 @@ clean:
 	@make -C GrowCutSegmentation clean
 
 	@echo "Clean up all builds!!"
-
