@@ -59,6 +59,7 @@ dicom2nrrd_converter = os.path.abspath('./DICOM-RT2NRRDConverter')
 nodule_segmentation = os.path.abspath('./NoduleSegmentation')
 feature_extraction = os.path.abspath('./FeatureExtraction')
 
+
 def task_load_dicom_list():
     # retrieve dicom dirs and preparation of the input image sets
     patient_path_list = [os.path.join(dicom_path, fn) for fn in next(os.walk(dicom_path))[1]]
@@ -72,27 +73,20 @@ def task_load_dicom_list():
 
         print(os.listdir(pt_dicom_path)[0])
         series = os.listdir(pt_dicom_path)[0]
-        study = os.listdir(os.path.join(pt_dicom_path,series))[0]
+        study = os.listdir(os.path.join(pt_dicom_path, series))[0]
 
         input_file = os.path.join(pt_dicom_path, series, study)
-        output_file = os.path.join(image_path, pid+".nrrd")
+        output_file = os.path.join(image_path, pid + ".nrrd")
 
         print(input_file, output_file)
         yield [input_file, output_file]
 
 
-@files(task_load_dicom_list)
 def task_dicom_to_nrrd_convert(input_file, output_file):
-    p = subprocess.Popen([dicom2nrrd_converter, input_file, 'no', output_file.replace(".nrrd","")])
+    p = subprocess.Popen([dicom2nrrd_converter, input_file, 'no', output_file.replace(".nrrd", "")])
     p.wait()
 
 
-@follows(mkdir(image_path))
-@subdivide(task_dicom_to_nrrd_convert,
-           formatter(),
-           output_path + "/" + experiment_set + "/{basename[0]}_*[0-9]-label.nrrd", # after '_' will be index of nodule which is some digit
-           "{basename[0]}",
-           output_path + "/" + experiment_set + "/{basename[0]}_")
 def task_nodule_segmentation(input_file, output_files, pid, output_prefix):
     # # IMPORTANT: cleanup rubbish from previous run first
     # for oo in output_files:
@@ -109,33 +103,63 @@ def task_nodule_segmentation(input_file, output_files, pid, output_prefix):
         short_diameter = pt_row['PD']
         print(idx, slice_number, large_diameter, short_diameter)
 
-        output_file = output_prefix+str(idx)+"-label.nrrd"
-        p = subprocess.Popen([nodule_segmentation, input_file, str(x), str(y), str(slice_number), str(large_diameter), str(short_diameter), str(output_file)])
+        output_file = output_prefix + str(idx) + "-label.nrrd"
+        p = subprocess.Popen([nodule_segmentation, input_file, str(x), str(y), str(slice_number), str(large_diameter),
+                              str(short_diameter), str(output_file)])
         p.wait()
 
 
-@follows(mkdir(output_path), mkdir(output_path + "/" + experiment_set))
-@transform(task_nodule_segmentation,
-           formatter(),
-           output_path + "/" + experiment_set + "/{basename[0]}.txt",
-           "{path[0]}/{basename[0]}.nrrd")
 def task_feature_extraction(input_file, output_file, mask_file):
     p = subprocess.Popen([feature_extraction, input_file, mask_file, output_file])
     p.wait()
 
 
-@merge(task_feature_extraction,
-       os.path.join(output_path, "feature_list_" + experiment_set + ".csv"))
 def task_feature_organization(input_files, output_file):
     organize_features.organize(input_files, output_file, parameter_list, feature_list)
+
+
+def make_pipeline_lungx():
+    pipeline_name = experiment_set
+    pipeline = Pipeline(pipeline_name)
+
+    # TODO : change to originate operator
+    pipeline.files(task_dicom_to_nrrd_convert,
+                   task_load_dicom_list)
+
+    pipeline.subdivide(name="task_nodule_segmentation",
+                       task_func=task_nodule_segmentation,
+                       input=output_from("task_dicom_to_nrrd_convert"),
+                       filter=formatter(),
+                       output=output_path + "/" + experiment_set + "/{basename[0]}_*[0-9]-label.nrrd",
+                       # after '_' will be index of nodule which is some digit
+                       extras=["{basename[0]}",
+                               output_path + "/" + experiment_set + "/{basename[0]}_"]) \
+        .follows(mkdir(image_path))
+
+    pipeline.transform(name="task_feature_extraction",
+                       task_func=task_feature_extraction,
+                       input=output_from("task_nodule_segmentation"),
+                       filter=formatter(),
+                       output=output_path + "/" + experiment_set + "/{basename[0]}.txt",
+                       extras=["{path[0]}/{basename[0]}.nrrd"]) \
+        .follows(mkdir(output_path), mkdir(output_path + "/" + experiment_set))
+
+    pipeline.merge(name="task_feature_organization",
+                   task_func=task_feature_organization,
+                   input=output_from("task_feature_extraction"),
+                   output=os.path.join(output_path, "feature_list_" + experiment_set + ".csv"))
+
+    return pipeline
 
 
 if __name__ == "__main__":
     freeze_support()
 
-    # pipeline_printout_graph("flowchart.png")
-    pipeline_printout(sys.stdout, verbose=6)
-    pipeline_run(multiprocess=6)
+    pipeline_lungx = make_pipeline_lungx()
+
+    # pipeline_lungx._printout_graph("flowchart.png")
+    pipeline_lungx.printout(sys.stdout, verbose=6)
+    pipeline_lungx.run(multiprocess=6)
 
 
 # TODO : bugfix ruffus task.py      5774:           job_result = ii.next(timeout=999999990->9999)
