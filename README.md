@@ -1,7 +1,7 @@
 Radiomics tools
 ===================
 
-Image processing tools and ruffus based workflow for radiomics feature analysis
+Image processing tools and ruffus based pipeline for radiomics feature analysis
 
 Install software
 --------------------------
@@ -9,24 +9,24 @@ Install software
   - Required
   - Script engine and useful modules
 
-  https://www.python.org/downloads/  
+  http://conda.pydata.org/miniconda.html - !recommend
+  https://www.python.org/downloads/
 
-  > Required modules - pandas, ruffus  
-  > Recommended module - scipy, numpy, ipython, matplotlib
+  > Required modules - pandas, ruffus, SimpleITK, scipy, numpy, ipython, matplotlib
   >
-  > install_modules.sh or install_modules.cmd is available to install these modules.
+  > install_modules.sh or install_modules.cmd is available to install these modules using conda.
 
 ### Slicer 4.5 ###
-- Recommended  
-- Image viewer, contour editor, simple image processing tool  
+  - Recommended  
+  - Image viewer, contour editor, simple image processing tool  
 
   http://download.slicer.org/
 
 
 ### To build  ###
-- gcc or visual studio
-- cmake
-- ITK
+  - gcc or visual studio
+  - cmake
+  - ITK
 
 
 Tools
@@ -89,12 +89,12 @@ Tools
 
 Usage
 -----
-Radiomics feature extraction example for LUNGx dataset
+Radiomics feature extraction pipeline example for LUNGx dataset
 
 1. Download DICOM images  
   https://wiki.cancerimagingarchive.net/display/Public/SPIE-AAPM+Lung+CT+Challenge  
 
-  Download all DICOM​ images to './DATA'  
+  Download all DICOM images to './DATA'  
   You can use the included metadata files for LUNGx (TrainingSet.csv and TestSet.csv)  
 
 2. Environmental parameters  
@@ -107,7 +107,7 @@ Radiomics feature extraction example for LUNGx dataset
   > image_path = data_path + '/' + experiment_set  
   > nodule_info_path = './' + experiment_set + '.csv'  
 
-3. Run workflow
+3. Run radiomics pipeline
   > $ python run.py or ./run.py
 
 4. Analysis feature data

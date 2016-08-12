@@ -1,4 +1,4 @@
-pip install pandas ruffus
-pip install scipy numpy ipython matplotlib
-#pip install pyqt pyside
-#pip install SimpleITK
+conda install pandas scipy numpy ipython matplotlib
+conda install -c bioconda ruffus
+conda install -c SimpleITK SimpleITK
+#conda install pyqt pyside
