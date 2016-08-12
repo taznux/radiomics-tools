@@ -9,7 +9,7 @@ Install software
   - Required
   - Script engine and useful modules
 
-  http://conda.pydata.org/miniconda.html - !recommend
+  http://conda.pydata.org/miniconda.html - !recommend!  
   https://www.python.org/downloads/
 
   > Required modules - pandas, ruffus, SimpleITK, scipy, numpy, ipython, matplotlib
