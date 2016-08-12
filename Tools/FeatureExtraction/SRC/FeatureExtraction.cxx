@@ -880,25 +880,51 @@ int main( int argc, char *argv[] )
     OriginType  inputImageOrigin  = inputImage->GetOrigin();
     RegionType  inputImageRegion  = inputImage->GetLargestPossibleRegion();
     SizeType    inputImageSize    = inputImageRegion.GetSize();
+    DirectionType inputImageDirection = inputImage->GetDirection();
 
     // To check coordinate For mask Image
     SpacingType labelImageSpacing = labelImage->GetSpacing();
     OriginType  labelImageOrigin  = labelImage->GetOrigin();
     RegionType  labelImageRegion  = labelImage->GetLargestPossibleRegion();
     SizeType    labelImageRegionSize = labelImageRegion.GetSize();
+    DirectionType labelImageDirection = labelImage->GetDirection();
 
     /////////////////////////////
 
     cout << "Input Image Spacing = " << inputImageSpacing << endl;
     cout << "Input Image Origin = " << inputImageOrigin << endl;
-    cout << "Input Image Size = " << inputImageSize << endl << endl << endl;
+    cout << "Input Image Size = " << inputImageSize << endl;
+    cout << "Input Image Direction = " << inputImageDirection << endl<< endl << endl;
 
 
     cout << "Label Image Spacing = " << labelImageSpacing << endl;
     cout << "Label Image Origin = " << labelImageOrigin << endl;
-    cout << "Label Image RegionSize = " << labelImageRegionSize << endl << endl << endl;
+    cout << "Label Image RegionSize = " << labelImageRegionSize << endl;
+    cout << "Label Image Direction = " << labelImageDirection << endl<< endl << endl;
 
+    //typedef itk::IdentityTransform<double, Dimension> TransformType;
+    typedef itk::ResampleImageFilter<InputImageType, InputImageType> ResampleImageFilterType;
+    ResampleImageFilterType::Pointer resampler = ResampleImageFilterType::New();
+    resampler->SetInput(inputImage);
+    resampler->SetSize(labelImageRegionSize);
+    resampler->SetOutputOrigin(labelImageOrigin);
+    resampler->SetOutputSpacing(labelImageSpacing);
+    resampler->SetOutputDirection(labelImageDirection);
+    //resampler->SetTransform(TransformType::New());
+    resampler->UpdateLargestPossibleRegion();
+    inputImage = resampler->GetOutput();
 
+    inputImageSpacing = inputImage->GetSpacing();
+    inputImageOrigin  = inputImage->GetOrigin();
+    inputImageRegion  = inputImage->GetLargestPossibleRegion();
+    inputImageSize    = inputImageRegion.GetSize();
+
+    cout << "Resampled Input Image Spacing = " << inputImageSpacing << endl;
+    cout << "Resampled Input Image Origin = " << inputImageOrigin << endl;
+    cout << "Resampled Input Image Size = " << inputImageSize << endl;
+    cout << "Resampled Input Image Direction = " << inputImageDirection << endl<< endl << endl;
+
+    WriteImageFile<InputImageType>(inputImage, "test.nrrd");
 
     // Image ROI
     InputImageType::RegionType inputRegion;

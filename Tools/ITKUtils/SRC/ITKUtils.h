@@ -56,6 +56,7 @@ typedef InputImageType::PointType      OriginType;
 typedef InputImageType::RegionType     RegionType;
 typedef InputImageType::SizeType       SizeType;
 typedef InputImageType::IndexType      IndexType;
+typedef InputImageType::DirectionType  DirectionType;
 
 
 //Definition of Morphological operation sturcture elements
