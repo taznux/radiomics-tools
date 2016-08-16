@@ -107,11 +107,17 @@ int main( int argc, char *argv[] )
 
     bool isTumorOnly = 0;
     bool isExpand = 0;
+    MaskPixelType tumorLabel = 307;
     if (argc > 5)
     {
         cout << argv[5] << endl;
         if(strcmp(argv[5],"T")==0)
             isTumorOnly = 1;
+        if(strcmp(argv[5],"T1")==0)
+        {
+            isTumorOnly = 1;
+            tumorLabel = 1;
+        }
         if(strcmp(argv[5],"TE")==0)
         {
             isTumorOnly = 1;
@@ -122,16 +128,16 @@ int main( int argc, char *argv[] )
 
     string inputLabelImageName = argv[1];
     string outputLabelImageName = argv[2];
-    
+
 
     cout << "Input Label Image Name = " << inputLabelImageName << endl;
     cout << "Output Label Image Name = " << outputLabelImageName << endl;
-    
+
 
     ///////// To Read the Mask image ////////////////////
     cout << "Get the mask from Input" << endl;
     LabelImageType::Pointer inputLabelImage = ReadImageFile<LabelImageType>(inputLabelImageName);
-    
+
     // To check coordinate of the input label image
     SpacingType inputImageSpacing = inputLabelImage->GetSpacing();
     OriginType  inputImageOrigin  = inputLabelImage->GetOrigin();
@@ -153,9 +159,9 @@ int main( int argc, char *argv[] )
     MaskImageType::Pointer tumorMaskImage;
 
     normalMaskImage = GetMaskImage(inputLabelImage, 306); // normal
-    tumorMaskImage = GetMaskImage(inputLabelImage, 307); // tumor
+    tumorMaskImage = GetMaskImage(inputLabelImage, tumorLabel); // tumor
     maskRegion = GetRoi(tumorMaskImage);
-    ExpandRoi(tumorMaskImage, maskRegion);
+    ExpandRoi(tumorMaskImage, maskRegion, radius+2);
     BoundingCheck(normalMaskImage, inputLabelImage, maskRegion, inputImageRegion);
     BoundingCheck(tumorMaskImage, inputLabelImage, maskRegion, inputImageRegion);
 
@@ -194,7 +200,7 @@ int main( int argc, char *argv[] )
 
     StructuringElementType structuringElement = StructuringElementType::Ball(elementRadius, true);
     StructuringElement2DType structuringElement2D = StructuringElement2DType::Ball(elementRadius2D, true);
- 
+
 
     MaskImageType::Pointer outputNormalMaskImageROI;
     MaskImageType::Pointer outputTumorMaskImageROI;
@@ -258,7 +264,7 @@ int main( int argc, char *argv[] )
         }
         cout << endl;
     }
- 
+
     if(isTumorOnly == 0)
     {
         // Tb = T & dilate(N,size), 307
@@ -353,12 +359,12 @@ int main( int argc, char *argv[] )
                 || (isExpand==1 && tumorOut.Get() > 0))
             {
                 //cout << "T ";
-                out.Set(307);
+                out.Set(tumorLabel);
             }
         }
     }
 
-        
+
 
 
     std::cout << "writeImage_spacing = " << outputLabelImage->GetSpacing() << std::endl ;

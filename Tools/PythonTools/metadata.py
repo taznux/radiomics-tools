@@ -6,7 +6,10 @@ def load_metadata(metadata_path):
     global metadata
     # load metadata
     metadata = pandas.read_csv(metadata_path)
-    metadata.set_index(['No.'], inplace=True)
+    try:
+        metadata.set_index(['No.'], inplace=True)
+    except KeyError:
+        metadata.set_index(['No'], inplace=True)
     #print(metadata)
 
 
