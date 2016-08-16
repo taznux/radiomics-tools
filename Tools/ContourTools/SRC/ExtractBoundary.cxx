@@ -128,16 +128,16 @@ int main( int argc, char *argv[] )
 
     string inputLabelImageName = argv[1];
     string outputLabelImageName = argv[2];
-    
+
 
     cout << "Input Label Image Name = " << inputLabelImageName << endl;
     cout << "Output Label Image Name = " << outputLabelImageName << endl;
-    
+
 
     ///////// To Read the Mask image ////////////////////
     cout << "Get the mask from Input" << endl;
     LabelImageType::Pointer inputLabelImage = ReadImageFile<LabelImageType>(inputLabelImageName);
-    
+
     // To check coordinate of the input label image
     SpacingType inputImageSpacing = inputLabelImage->GetSpacing();
     OriginType  inputImageOrigin  = inputLabelImage->GetOrigin();
@@ -161,7 +161,7 @@ int main( int argc, char *argv[] )
     normalMaskImage = GetMaskImage(inputLabelImage, 306); // normal
     tumorMaskImage = GetMaskImage(inputLabelImage, tumorLabel); // tumor
     maskRegion = GetRoi(tumorMaskImage);
-    ExpandRoi(tumorMaskImage, maskRegion);
+    ExpandRoi(tumorMaskImage, maskRegion, radius+2);
     BoundingCheck(normalMaskImage, inputLabelImage, maskRegion, inputImageRegion);
     BoundingCheck(tumorMaskImage, inputLabelImage, maskRegion, inputImageRegion);
 
@@ -200,7 +200,7 @@ int main( int argc, char *argv[] )
 
     StructuringElementType structuringElement = StructuringElementType::Ball(elementRadius, true);
     StructuringElement2DType structuringElement2D = StructuringElement2DType::Ball(elementRadius2D, true);
- 
+
 
     MaskImageType::Pointer outputNormalMaskImageROI;
     MaskImageType::Pointer outputTumorMaskImageROI;
@@ -264,7 +264,7 @@ int main( int argc, char *argv[] )
         }
         cout << endl;
     }
- 
+
     if(isTumorOnly == 0)
     {
         // Tb = T & dilate(N,size), 307
@@ -364,7 +364,7 @@ int main( int argc, char *argv[] )
         }
     }
 
-        
+
 
 
     std::cout << "writeImage_spacing = " << outputLabelImage->GetSpacing() << std::endl ;
