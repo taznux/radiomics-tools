@@ -107,11 +107,17 @@ int main( int argc, char *argv[] )
 
     bool isTumorOnly = 0;
     bool isExpand = 0;
+    MaskPixelType tumorLabel = 307;
     if (argc > 5)
     {
         cout << argv[5] << endl;
         if(strcmp(argv[5],"T")==0)
             isTumorOnly = 1;
+        if(strcmp(argv[5],"T1")==0)
+        {
+            isTumorOnly = 1;
+            tumorLabel = 1;
+        }
         if(strcmp(argv[5],"TE")==0)
         {
             isTumorOnly = 1;
@@ -153,7 +159,7 @@ int main( int argc, char *argv[] )
     MaskImageType::Pointer tumorMaskImage;
 
     normalMaskImage = GetMaskImage(inputLabelImage, 306); // normal
-    tumorMaskImage = GetMaskImage(inputLabelImage, 307); // tumor
+    tumorMaskImage = GetMaskImage(inputLabelImage, tumorLabel); // tumor
     maskRegion = GetRoi(tumorMaskImage);
     ExpandRoi(tumorMaskImage, maskRegion);
     BoundingCheck(normalMaskImage, inputLabelImage, maskRegion, inputImageRegion);
@@ -353,7 +359,7 @@ int main( int argc, char *argv[] )
                 || (isExpand==1 && tumorOut.Get() > 0))
             {
                 //cout << "T ";
-                out.Set(307);
+                out.Set(tumorLabel);
             }
         }
     }

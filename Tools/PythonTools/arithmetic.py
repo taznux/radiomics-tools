@@ -44,4 +44,4 @@ if __name__ == "__main__":
             print("Not supporting operator " + sys.argv[1])
             exit(-1)
 
-        sitk.WriteImage(outputImage, outputFilename)
+        sitk.WriteImage(outputImage, outputFilename, True)
