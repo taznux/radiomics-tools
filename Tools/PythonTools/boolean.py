@@ -1,22 +1,57 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+This script is for image boolean calculation
+"""
 
 import SimpleITK as sitk
 import sys
 
 
 def image_and(input_image1, input_image2):
+    """
+    Bitwise 'and' operation between two input images
+
+    :param input_image1: first input image
+    :param input_image2: second input image
+    :return: result image
+    """
     return sitk.And(input_image1, input_image2)
 
 
 def image_or(input_image1, input_image2):
+    """
+
+    Bitwise 'or' operation between two input images
+
+    :param input_image1: first input image
+    :param input_image2: second input image
+    :return: result image
+    """
     return sitk.Or(input_image1, input_image2)
 
 
 def image_xor(input_image1, input_image2):
+    """
+
+    Bitwise 'exclusive-or' image calculation between two inputs
+
+    :param input_image1: first input image
+    :param input_image2: second input image
+    :return: result image
+    """
     return sitk.Xor(input_image1, input_image2)
 
 
 def image_not(input_image):
+    """
+
+    Bitwise inverted image calculation
+
+    :param input_image: input image
+    :return: result image
+    """
     return sitk.Not(input_image)
 
 

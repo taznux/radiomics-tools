@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""
+This is a script file for organizing features from each individual into a single csv file.
+"""
 
 import os
 import sys
@@ -52,6 +57,13 @@ feature_list = shape_feature + shape_intensity_feature + intensity_feature + sha
 
 
 def find(inputlist, value):
+    """
+    Find target feature in feature list
+
+    :param inputlist: feature list
+    :param value: feature name
+    :return: target feature index
+    """
     try:
         idx = inputlist.index(value)
     except ValueError:
@@ -61,6 +73,13 @@ def find(inputlist, value):
 
 
 def feature_parsing(filename, in_feature_list):
+    """
+    Parsing feature text to value, vector, or matrix
+
+    :param filename: a feature text filename from feature extraction code
+    :param in_feature_list: target feature list
+    :return: parsed feature values
+    """
     values = [''] * len(in_feature_list)
     try:
         f = open(filename, 'r')
@@ -128,6 +147,14 @@ def feature_parsing(filename, in_feature_list):
 
 
 def convertNameToIndex(prefix, in_feature_list):
+    """
+    Feature name conversion from original name to code
+    T01, T02 ... T99
+
+    :param prefix: code prefix, eg. T for texture, S for shape, or I for intensity
+    :param in_feature_list: target feature list
+    :return: coded feature names
+    """
     idx = []
     for i in range(len(in_feature_list)):
         idx.append(prefix + '%02d' % (i + 1))
@@ -136,6 +163,14 @@ def convertNameToIndex(prefix, in_feature_list):
 
 
 def organize(input_files, output, parameter_list, feature_list):
+    """
+    Feature organization from feature text files to a single csv file for analysis
+
+    :param input_files: feature text files in list
+    :param output: csv file path
+    :param parameter_list: patient parameter list, eg. PID and No.
+    :param feature_list: target feature list
+    """
     fw = open(output, 'w')
 
     column_names = ','.join(parameter_list + feature_list)

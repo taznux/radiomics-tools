@@ -1,8 +1,20 @@
+# -*- coding: utf-8 -*-
+
+"""
+This module is metadata using pandas data frame
+"""
+
 import pandas
 
 metadata = pandas.DataFrame()
 
+
 def load_metadata(metadata_path):
+    """
+    load metadata file
+
+    :param metadata_path: a path for metadata file
+    """
     global metadata
     # load metadata
     metadata = pandas.read_csv(metadata_path)
@@ -14,6 +26,12 @@ def load_metadata(metadata_path):
 
 
 def getPatient(pid):
+    """
+    To access an individual patient's information with pid
+
+    :param pid: unique patient ID
+    :return: metadata of the patient in dictionary structure
+    """
     res = ''
     #print(metadata)
     try:
