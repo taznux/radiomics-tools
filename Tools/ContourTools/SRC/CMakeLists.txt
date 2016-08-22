@@ -1,9 +1,9 @@
 PROJECT (ContourTools)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
-#------------------------------------------------ 
+#------------------------------------------------
 # ITK
-#------------------------------------------------ 
+#------------------------------------------------
 
 SET(ITK_DIR "/data/research/lu_lab/work/wchoi/software/ITK490-build")
 IF(WIN32)
@@ -18,8 +18,8 @@ ELSE(ITK_FOUND)
     "Cannot build Application without ITK. Please set ITK_DIR.")
 ENDIF(ITK_FOUND)
 
-INCLUDE_DIRECTORIES(../../../Tools/ITKUtils/SRC)
-FIND_LIBRARY(ITKUTILS_LIB ITKUtils ../../../Tools/ITKUtils/LIB/ REQUIRED)
+INCLUDE_DIRECTORIES(../../ITKUtils/SRC)
+FIND_LIBRARY(ITKUTILS_LIB ITKUtils ../../ITKUtils/LIB/ REQUIRED)
 
 ADD_EXECUTABLE(ROIGenerator
     ROIGenerator.cxx

@@ -1,9 +1,9 @@
 PROJECT (DICOMTools)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
-#------------------------------------------------ 
+#------------------------------------------------
 # ITK
-#------------------------------------------------ 
+#------------------------------------------------
 
 IF(WIN32)
   SET(ITK_DIR "C:/Program Files/ITK/lib/cmake/ITK-4.8")
@@ -28,8 +28,8 @@ ELSE(Boost_FOUND)
     "Cannot build Application without Boost. Please set Boost_DIR.")
 ENDIF(Boost_FOUND)
 
-INCLUDE_DIRECTORIES(../../../Tools/ITKUtils/SRC)
-FIND_LIBRARY(ITKUTILS_LIB ITKUtils ../../../Tools/ITKUtils/LIB/ REQUIRED)
+INCLUDE_DIRECTORIES(../../ITKUtils/SRC)
+FIND_LIBRARY(ITKUTILS_LIB ITKUtils ../../ITKUtils/LIB/ REQUIRED)
 
 ADD_EXECUTABLE(DICOM2NRRDConverter
     DICOM2NRRDConverter.cxx
@@ -42,7 +42,7 @@ ADD_EXECUTABLE(DICOM2NRRDConverterNLST
 )
 ADD_EXECUTABLE("DICOM-RT2NRRDConverter"
     DICOM-RT2NRRDConverter.cxx
-) 
+)
 ADD_EXECUTABLE("DICOMTagReader"
     DICOMTagReader.cxx
 )
@@ -54,6 +54,5 @@ SET (CMAKE_VERBOSE_MAKEFILE OFF)
 TARGET_LINK_LIBRARIES(DICOM2NRRDConverter ${ITK_LIBRARIES} ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(DICOM2NRRDConverterHCC ${ITK_LIBRARIES} ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(DICOM2NRRDConverterNLST ${ITK_LIBRARIES} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(DICOM-RT2NRRDConverter ${ITK_LIBRARIES} ${ITKUTILS_LIB}) 
-TARGET_LINK_LIBRARIES(DICOMTagReader ${ITK_LIBRARIES} ${ITKUTILS_LIB}) 
-
+TARGET_LINK_LIBRARIES(DICOM-RT2NRRDConverter ${ITK_LIBRARIES} ${ITKUTILS_LIB})
+TARGET_LINK_LIBRARIES(DICOMTagReader ${ITK_LIBRARIES} ${ITKUTILS_LIB})
