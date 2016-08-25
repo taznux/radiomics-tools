@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 
 import os
+import os.path as osp
 import sys
 import subprocess
 from multiprocessing import freeze_support
 from ruffus import *
 
-sys.path.append("Tools/PythonTools/")
-import organize_features
-import metadata
+from qradiomics import *
+from qradiomics.io import *
+from qradiomics.util import organize_features as organize_features
 
 ################################################################################
 # Set your environmental parameters
 ################################################################################
-# experiment_set = 'TrainingSet'
-experiment_set = 'TestSet'
+experiment_set = 'TrainingSet'
+#experiment_set = 'TestSet'
 output_path = 'output'
 data_path = 'DATA'
 dicom_path = data_path + '/DOI'
@@ -55,36 +56,35 @@ texture_feature_list = ['MeanOfEnergy', 'MeanOfEntropy', 'MeanOfCorrelation', 'M
 feature_list = shape_feature_list + intensity_feature_list + texture_feature_list
 
 # paths for tools
-dicom2nrrd_converter = os.path.abspath('./DICOM-RT2NRRDConverter')
-nodule_segmentation = os.path.abspath('./NoduleSegmentation')
-feature_extraction = os.path.abspath('./FeatureExtraction')
+dicom2nrrd_converter = osp.abspath('./DICOM-RT2NRRDConverter')
+nodule_segmentation = osp.abspath('./NoduleSegmentation')
+feature_extraction = osp.abspath('./FeatureExtraction')
 
 
 def task_load_dicom_list():
     # retrieve dicom dirs and preparation of the input image sets
-    patient_path_list = [os.path.join(dicom_path, fn) for fn in next(os.walk(dicom_path))[1]]
+    patient_path_list = [osp.join(dicom_path, fn) for fn in next(os.walk(dicom_path))[1]]
 
     for pt_dicom_path in patient_path_list:
-        pid = os.path.basename(pt_dicom_path)
+        pid = osp.basename(pt_dicom_path)
 
-        pt = metadata.getPatient(pid)
+        pt = metadata.get_patient(pid)
         if len(pt) == 0:
             continue
 
         print(os.listdir(pt_dicom_path)[0])
         series = os.listdir(pt_dicom_path)[0]
-        study = os.listdir(os.path.join(pt_dicom_path, series))[0]
+        study = os.listdir(osp.join(pt_dicom_path, series))[0]
 
-        input_file = os.path.join(pt_dicom_path, series, study)
-        output_file = os.path.join(image_path, pid + ".nrrd")
+        input_file = osp.join(pt_dicom_path, series, study)
+        output_file = osp.join(image_path, pid + ".nrrd")
 
         print(input_file, output_file)
         yield [input_file, output_file]
 
 
 def task_dicom_to_nrrd_convert(input_file, output_file):
-    p = subprocess.Popen([dicom2nrrd_converter, input_file, 'no', output_file.replace(".nrrd", "")])
-    p.wait()
+    image_write(image_read(input_file), output_file)
 
 
 def task_nodule_segmentation(input_file, output_files, pid, output_prefix):
@@ -92,7 +92,7 @@ def task_nodule_segmentation(input_file, output_files, pid, output_prefix):
     # for oo in output_files:
     #     os.unlink(oo)
 
-    pt = metadata.getPatient(pid)
+    pt = metadata.get_patient(pid)
 
     for idx in pt:
         pt_row = pt[idx]
@@ -104,14 +104,16 @@ def task_nodule_segmentation(input_file, output_files, pid, output_prefix):
         print(idx, slice_number, large_diameter, short_diameter)
 
         output_file = output_prefix + str(idx) + "-label.nrrd"
-        p = subprocess.Popen([nodule_segmentation, input_file, str(x), str(y), str(slice_number), str(large_diameter),
-                              str(short_diameter), str(output_file)])
-        p.wait()
+        open(output_file, "w")
+        #p = subprocess.Popen([nodule_segmentation, input_file, str(x), str(y), str(slice_number), str(large_diameter),
+        #                      str(short_diameter), str(output_file)])
+        #p.wait()
 
 
 def task_feature_extraction(input_file, output_file, mask_file):
-    p = subprocess.Popen([feature_extraction, input_file, mask_file, output_file])
-    p.wait()
+    open(output_file, "w")
+    #p = subprocess.Popen([feature_extraction, input_file, mask_file, output_file])
+    #p.wait()
 
 
 def task_feature_organization(input_files, output_file):
@@ -147,7 +149,7 @@ def make_pipeline_lungx():
     pipeline.merge(name="task_feature_organization",
                    task_func=task_feature_organization,
                    input=output_from("task_feature_extraction"),
-                   output=os.path.join(output_path, "feature_list_" + experiment_set + ".csv"))
+                   output=osp.join(output_path, "feature_list_" + experiment_set + ".csv"))
 
     return pipeline
 
@@ -159,7 +161,7 @@ if __name__ == "__main__":
 
     # pipeline_lungx._printout_graph("flowchart.png")
     pipeline_lungx.printout(sys.stdout, verbose=6)
-    pipeline_lungx.run(multiprocess=6)
+    pipeline_lungx.run(multiprocess=3)
 
 
 # TODO : bugfix ruffus task.py      5774:           job_result = ii.next(timeout=999999990->9999)
