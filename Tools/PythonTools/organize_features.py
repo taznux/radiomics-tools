@@ -102,46 +102,49 @@ def feature_parsing(filename, in_feature_list):
         else:
             matrix_size = 3
 
-        try:
-            value = float(value_str)
+        if value_str[0] == '[':  # vector
+            vector = []
+            idx = 1
+            for v in value_str[1:-1].split(','):
+                new_feature_name = feature_name + str(idx)
+                v_str = v.strip()
+                fidx = find(in_feature_list, new_feature_name)
+                if fidx > -1:
+                    values[fidx] = v_str
+                value = float(v_str)
+                vector.append(value)
+                idx += 1
+                print(new_feature_name + "=" + str(value))
+
+        elif value_str.find(' ')>0:  # matrix
+            if row_idx == 0:
+                idx = 1
+                matrix[0] = []
+                matrix[1] = []
+                matrix[2] = []
+            for v in value_str.split(' '):
+                new_feature_name = feature_name + str(idx)
+                v_str = v.strip()
+                fidx = find(in_feature_list, new_feature_name)
+                if fidx > -1:
+                    values[fidx] = v_str
+                value = float(v_str)
+                matrix[row_idx].append(value)
+                print(new_feature_name + "=" + str(value))
+                idx += 1
+            row_idx += 1
+            if row_idx == matrix_size:
+                row_idx = 0
+        else:
+            try:
+                value = float(value_str)
+            except ValueError:
+                value = float('nan')
+
             fidx = find(in_feature_list, feature_name)
             if fidx > -1:
                 values[fidx] = value_str
             print(feature_name + "=" + str(value))
-        except ValueError:  # Vector or Matrix
-            idx = 1
-            if value_str[0] == '[':  # vector
-                vector = []
-                for v in value_str[1:-1].split(','):
-                    new_feature_name = feature_name + str(idx)
-                    v_str = v.strip()
-                    fidx = find(in_feature_list, new_feature_name)
-                    if fidx > -1:
-                        values[fidx] = v_str
-                    value = float(v_str)
-                    vector.append(value)
-                    idx += 1
-                    print(new_feature_name + "=" + str(value))
-
-            else:  # matrix
-                if row_idx == 0:
-                    idx = 1
-                    matrix[0] = []
-                    matrix[1] = []
-                    matrix[2] = []
-                for v in value_str.split(' '):
-                    new_feature_name = feature_name + str(idx)
-                    v_str = v.strip()
-                    fidx = find(in_feature_list, new_feature_name)
-                    if fidx > -1:
-                        values[fidx] = v_str
-                    value = float(v_str)
-                    matrix[row_idx].append(value)
-                    print(new_feature_name + "=" + str(value))
-                    idx += 1
-                row_idx += 1
-                if row_idx == matrix_size:
-                    row_idx = 0
 
     return values
 
