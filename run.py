@@ -73,10 +73,10 @@ def task_load_dicom_list():
             continue
 
         print(os.listdir(pt_dicom_path)[0])
-        series = os.listdir(pt_dicom_path)[0]
-        study = os.listdir(osp.join(pt_dicom_path, series))[0]
+        study = os.listdir(pt_dicom_path)[-1]
+        series = os.listdir(osp.join(pt_dicom_path, study))[-1]
 
-        input_file = osp.join(pt_dicom_path, series, study)
+        input_file = osp.join(pt_dicom_path, study, series)
         output_file = osp.join(image_path, pid + ".nrrd")
 
         print(input_file, output_file)
@@ -161,7 +161,7 @@ if __name__ == "__main__":
 
     # pipeline_lungx._printout_graph("flowchart.png")
     pipeline_lungx.printout(sys.stdout, verbose=6)
-    pipeline_lungx.run(multiprocess=3)
+    pipeline_lungx.run(multiprocess=5)
 
 
 # TODO : bugfix ruffus task.py      5774:           job_result = ii.next(timeout=999999990->9999)
