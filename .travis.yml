@@ -48,6 +48,7 @@ before_install:
   - if test $TRAVIS_OS_NAME == osx ; then brew update; brew install python3; fi
   - sudo python3 -m pip install conda
   - conda config --set always_yes yes --set changeps1 no
+  - conda create -n my_root --clone=~/conda
   - conda install --yes conda
   - conda update --yes conda
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
