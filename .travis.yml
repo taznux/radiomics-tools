@@ -9,6 +9,7 @@ addons:
   apt:
     packages:
     - cmake
+    - libboost-dev
 
 matrix:
   include:
