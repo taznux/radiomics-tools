@@ -42,8 +42,8 @@ cache:
     - $HOME/itk-v4.10.0-build
 
 before_install:
-  - pip install conda
-  - sh install_modules.sh  
+  - sudo pip install conda
+  - sudo sh install_modules.sh
 
 before_script:
   - export NUM_THREADS=4
@@ -65,5 +65,5 @@ script:
   - cd Tools
   - make --jobs=$NUM_THREADS --keep-going all
   - python run.py
-  
+
   
