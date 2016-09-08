@@ -1,4 +1,6 @@
-conda install pandas scipy numpy ipython matplotlib -y
-conda install -c bioconda ruffus -y
-conda install -c SimpleITK SimpleITK -y
-#conda install pyqt pyside -y
+python3 -m pip install conda
+conda config --set always_yes yes --set changeps1 no
+conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
+conda install --yes -c bioconda ruffus
+conda install --yes -c SimpleITK SimpleITK 
+#conda install pyqt pyside
