@@ -48,8 +48,11 @@ cache:
     - $HOME/itk-v4.10.0-build
 
 before_install:
-  - sudo pip install conda
-  - sudo sh install_modules.sh
+  - sudo python$TRAVIS_PYTHON_VERSION pip install conda
+  - conda update --yes conda
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
+  - conda install --yes -c bioconda ruffus
+  - conda install --yes -c SimpleITK SimpleITK 
 
 before_script:
   - export NUM_THREADS=4
