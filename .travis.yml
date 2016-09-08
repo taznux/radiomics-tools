@@ -15,28 +15,22 @@ matrix:
   include:
     - os: osx
       compiler: clang
-      env: ITK_VERSION=v4.8.0
-      python: 3.5
+      env: ITK_VERSION=v4.8.0 TRAVIS_PYTHON_VERSION=3.5
     - os: osx
       compiler: clang
-      env: ITK_VERSION=v4.9.0
-      python: 3.5
+      env: ITK_VERSION=v4.9.0 TRAVIS_PYTHON_VERSION=3.5
     - os: osx
       compiler: clang
-      env: ITK_VERSION=v4.10.0
-      python: 3.5
+      env: ITK_VERSION=v4.10.0 TRAVIS_PYTHON_VERSION=3.5
     - os: linux
       compiler: gcc
-      env: ITK_VERSION=v4.8.0
-      python: 3.5
+      env: ITK_VERSION=v4.8.0 TRAVIS_PYTHON_VERSION=3.5
     - os: linux
       compiler: gcc
-      env: ITK_VERSION=v4.9.0
-      python: 3.5
+      env: ITK_VERSION=v4.9.0 TRAVIS_PYTHON_VERSION=3.5
     - os: linux
       compiler: gcc
-      env: ITK_VERSION=v4.10.0
-      python: 3.5
+      env: ITK_VERSION=v4.10.0 TRAVIS_PYTHON_VERSION=3.5
 
 cache:
   - directories:
