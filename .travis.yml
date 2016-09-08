@@ -71,6 +71,6 @@ before_script:
 script:
   - cd Tools
   - make --jobs=$NUM_THREADS --keep-going all
-  - python run.py
+  - python3 run.py
 
   
