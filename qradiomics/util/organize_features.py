@@ -70,7 +70,6 @@ def find(inputlist, value):
 
     return idx
 
-
 def feature_parsing(filename, in_feature_list):
     """Parsing feature text to value, vector, or matrix
 
@@ -106,13 +105,13 @@ def feature_parsing(filename, in_feature_list):
             for v in value_str[1:-1].split(','):
                 new_feature_name = feature_name + str(idx)
                 v_str = v.strip()
+                value = v_str
                 fidx = find(in_feature_list, new_feature_name)
                 if fidx > -1:
-                    values[fidx] = v_str
-                value = float(v_str)
+                    values[fidx] = value
                 vector.append(value)
                 idx += 1
-                print(new_feature_name + "=" + str(value))
+                print(new_feature_name + "=" + value)
 
         elif value_str.find(' ')>0:  # matrix
             if row_idx == 0:
@@ -123,26 +122,23 @@ def feature_parsing(filename, in_feature_list):
             for v in value_str.split(' '):
                 new_feature_name = feature_name + str(idx)
                 v_str = v.strip()
+                value = v_str
                 fidx = find(in_feature_list, new_feature_name)
                 if fidx > -1:
-                    values[fidx] = v_str
-                value = float(v_str)
+                    values[fidx] = value
                 matrix[row_idx].append(value)
-                print(new_feature_name + "=" + str(value))
+                print(new_feature_name + "=" + value)
                 idx += 1
             row_idx += 1
             if row_idx == matrix_size:
                 row_idx = 0
         else:
-            try:
-                value = float(value_str)
-            except ValueError:
-                value = float('nan')
+            value = value_str
 
             fidx = find(in_feature_list, feature_name)
             if fidx > -1:
-                values[fidx] = value_str
-            print(feature_name + "=" + str(value))
+                values[fidx] = value
+            print(feature_name + "=" + value)
 
     return values
 
