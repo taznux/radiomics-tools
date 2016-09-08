@@ -5,6 +5,7 @@ compiler:
  - clang
 
 before_install:
+ - sudo add-apt-repository ppa:zarquon42/precise-backports -y
  - sudo apt-get install -y cmake libinsighttoolkit4-dev
 
 script:
