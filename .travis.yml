@@ -47,14 +47,10 @@ cache:
 before_install:
   - if test $TRAVIS_OS_NAME == osx ; then brew update; brew install python3; fi
   - sudo python3 -m pip install conda
-  - conda config --set always_yes yes --set changeps1 no
-  - mkdir $HOME/conda
-  - conda create -n my_root --clone=$HOME/conda
-  - conda install --yes conda
-  - conda update --yes conda
-  - conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
-  - conda install --yes -c bioconda ruffus
-  - conda install --yes -c SimpleITK SimpleITK 
+  - sudo conda config --set always_yes yes --set changeps1 no
+  - sudo conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
+  - sudo conda install --yes -c bioconda ruffus
+  - sudo conda install --yes -c SimpleITK SimpleITK 
 
 before_script:
   - export NUM_THREADS=4
