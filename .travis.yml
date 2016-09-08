@@ -10,7 +10,7 @@ addons:
     packages:
     - cmake
     - libboost-dev
-    - python3.5
+    - python3
 
 matrix:
   include:
@@ -44,7 +44,7 @@ cache:
 
 before_install:
   - if test $TRAVIS_OS_NAME == osx ; then brew update; brew install python3; fi
-  - sudo python$TRAVIS_PYTHON_VERSION -m pip install conda
+  - sudo pip3 install conda
   - conda update --yes conda
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
   - conda install --yes -c bioconda ruffus
