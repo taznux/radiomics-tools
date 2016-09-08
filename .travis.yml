@@ -48,7 +48,7 @@ cache:
     - $HOME/itk-v4.10.0-build
 
 before_install:
-  - sudo python$TRAVIS_PYTHON_VERSION pip install conda
+  - sudo python$TRAVIS_PYTHON_VERSION -m pip install conda
   - conda update --yes conda
   - conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
   - conda install --yes -c bioconda ruffus
