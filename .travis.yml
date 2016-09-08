@@ -42,7 +42,8 @@ cache:
     - $HOME/itk-v4.10.0-build
 
 before_install:
-  - if test $TRAVIS_OS_NAME == osx ; then brew update; brew install fftw; fi
+  - pip install conda
+  - sh install_modules.sh  
 
 before_script:
   - export NUM_THREADS=4
@@ -63,4 +64,6 @@ before_script:
 script:
   - cd Tools
   - make --jobs=$NUM_THREADS --keep-going all
+  - python run.py
+  
   
