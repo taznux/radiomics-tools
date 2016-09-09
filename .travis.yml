@@ -61,16 +61,15 @@ before_script:
   - cd externals/TCIAExplorer
   - python3 setup.py install
   - cd -
+  - python3 download_lungx_tcia.py
 
 script:
-  - mkdir build
+  - if ! test -d build; then mkdir build; fi
   - cd build
-  - cmake .. -DENABLE_COVERAGE=On && make && make test
+  - cmake .. -DENABLE_COVERAGE=On && make && make test && cd - && coverage run run.py && cd build
   - make gcov
   - make lcov
   - cd -
-  - python3 download_lungx_tcia.py
-  - coverage run run.py
   - codecov
 
 after_success:

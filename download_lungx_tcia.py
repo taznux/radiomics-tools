@@ -11,10 +11,11 @@ api_key = os.getenv("TCIA_API_KEY")
 
 tcia = TciaExplorer(api_key=api_key) #set api_key
 
-patients = ["CT-Training-LC001", "CT-Training-LC002", "CT-Training-LC003",
-            "CT-Training-LC008", "CT-Training-LC009", "CT-Training-BE001",
-            "CT-Training-BE002", "CT-Training-BE006", "CT-Training-BE007",
-            "CT-Training-BE010",]
+patients = ["CT-Training-LC001", "CT-Training-LC002", "CT-Training-LC003"]
+#patients = ["CT-Training-LC001", "CT-Training-LC002", "CT-Training-LC003",
+#            "CT-Training-LC008", "CT-Training-LC009", "CT-Training-BE001",
+#            "CT-Training-BE002", "CT-Training-BE006", "CT-Training-BE007",
+#            "CT-Training-BE010",]
 
 for patient in patients:
     ###################Fetch study###############
