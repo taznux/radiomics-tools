@@ -56,9 +56,9 @@ texture_feature_list = ['MeanOfEnergy', 'MeanOfEntropy', 'MeanOfCorrelation', 'M
 feature_list = shape_feature_list + intensity_feature_list + texture_feature_list
 
 # paths for tools
-dicom2nrrd_converter = osp.abspath('./DICOM-RT2NRRDConverter')
-nodule_segmentation = osp.abspath('./NoduleSegmentation')
-feature_extraction = osp.abspath('./FeatureExtraction')
+dicom2nrrd_converter = osp.abspath('bin/DICOM-RT2NRRDConverter')
+nodule_segmentation = osp.abspath('bin/NoduleSegmentation')
+feature_extraction = osp.abspath('bin/FeatureExtraction')
 
 
 def task_load_dicom_list():

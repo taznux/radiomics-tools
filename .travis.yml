@@ -13,6 +13,7 @@ addons:
     - python3
     - python3-pip
     - python3-yaml
+    - lcov
 
 matrix:
   include:
@@ -45,7 +46,7 @@ cache:
     - $HOME/itk-v4.10.0-build
 
 before_install:
-  - if test $TRAVIS_OS_NAME == osx ; then brew update; brew install python3; brew upgrade libpng; fi
+  - if test $TRAVIS_OS_NAME == osx ; then brew update; brew install python3 lcov; brew upgrade libpng; fi
 
 before_script:
   - export NUM_THREADS=4
@@ -63,11 +64,17 @@ before_script:
   - make --jobs=$NUM_THREADS --keep-going
   - cd -
   - sh install_modules.sh
+  - python3 -m pip install codecov
 
 script:
-  - cd Tools
-  - make --jobs=$NUM_THREADS --keep-going all
+  - mkdir build
+  - cd build
+  - cmake .. -DENABLE_COVERAGE=On && make && make test
+  - make gcov
+  - make lcov
   - cd -
-  - python3 run.py
-
+  - coverage run run.py
+  - codecov
   
+after_success:
+  - bash <(curl -s https://codecov.io/bash) -X gcov

@@ -1,6 +1,6 @@
 Radiomics tools
 ===================
-[![Build Status](https://travis-ci.org/taznux/radiomics-tools.svg?branch=master)](https://travis-ci.org/taznux/radiomics-tools)
+[![Build Status](https://travis-ci.org/taznux/radiomics-tools.svg?branch=master)](https://travis-ci.org/taznux/radiomics-tools) [![codecov](https://codecov.io/gh/taznux/radiomics-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/taznux/radiomics-tools) [![Stories in Ready](https://badge.waffle.io/taznux/radiomics-tools.svg?label=ready&title=Ready)](http://waffle.io/taznux/radiomics-tools)
 
 Image processing tools and ruffus based pipeline for radiomics feature analysis
 

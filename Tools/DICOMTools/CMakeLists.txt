@@ -1,24 +1,10 @@
 PROJECT (DICOMTools)
-CMAKE_MINIMUM_REQUIRED(VERSION 2.4)
 
-#------------------------------------------------
-# ITK
-#------------------------------------------------
+SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
-IF(WIN32)
-  SET(ITK_DIR "C:/Program Files/ITK/lib/cmake/ITK-4.8")
-  SET(Boost_INCLUDE_DIR "C:/local/boost_1_59_0")
-  SET(Boost_LIBRARY_DIR "C:/local/boost_1_59_0/lib")
-ENDIF(WIN32)
-
-SET(ITK_DIR "/data/research/lu_lab/work/wchoi/software/ITK490-build")
-FIND_PACKAGE(ITK)
-IF(ITK_FOUND)
-  INCLUDE(${ITK_USE_FILE})
-ELSE(ITK_FOUND)
-  MESSAGE(FATAL_ERROR
-    "Cannot build Application without ITK. Please set ITK_DIR.")
-ENDIF(ITK_FOUND)
+if(COMMAND cmake_policy)
+  cmake_policy(SET CMP0003 NEW)
+endif(COMMAND cmake_policy)
 
 FIND_PACKAGE(Boost)
 IF(Boost_FOUND)
@@ -28,8 +14,7 @@ ELSE(Boost_FOUND)
     "Cannot build Application without Boost. Please set Boost_DIR.")
 ENDIF(Boost_FOUND)
 
-INCLUDE_DIRECTORIES(../../ITKUtils/SRC)
-FIND_LIBRARY(ITKUTILS_LIB ITKUtils ../../ITKUtils/LIB/ REQUIRED)
+INCLUDE_DIRECTORIES(../ITKUtils)
 
 ADD_EXECUTABLE(DICOM2NRRDConverter
     DICOM2NRRDConverter.cxx
@@ -54,5 +39,13 @@ SET (CMAKE_VERBOSE_MAKEFILE OFF)
 TARGET_LINK_LIBRARIES(DICOM2NRRDConverter ${ITK_LIBRARIES} ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(DICOM2NRRDConverterHCC ${ITK_LIBRARIES} ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(DICOM2NRRDConverterNLST ${ITK_LIBRARIES} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(DICOM-RT2NRRDConverter ${ITK_LIBRARIES} ${ITKUTILS_LIB})
-TARGET_LINK_LIBRARIES(DICOMTagReader ${ITK_LIBRARIES} ${ITKUTILS_LIB})
+TARGET_LINK_LIBRARIES(DICOM-RT2NRRDConverter ${ITK_LIBRARIES})
+TARGET_LINK_LIBRARIES(DICOMTagReader ${ITK_LIBRARIES})
+
+
+find_package(codecov)
+add_coverage(DICOM2NRRDConverter)
+add_coverage(DICOM2NRRDConverterHCC)
+add_coverage(DICOM2NRRDConverterNLST)
+add_coverage(DICOM-RT2NRRDConverter)
+add_coverage(DICOMTagReader)
