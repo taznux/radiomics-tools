@@ -57,7 +57,6 @@ before_script:
   - cd -
   - sh install_modules.sh
   - python3 -m pip install codecov
-  - python3 setup.py install
   - cd externals/TCIAExplorer
   - python3 setup.py install
   - cd -
