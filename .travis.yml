@@ -68,11 +68,12 @@ before_script:
   - python3 -m pip install codecov
 
 script:
-  - git submodule init && git submodule update
-  - mkdir build && cd build
+  - mkdir build
+  - cd build
   - cmake .. -DENABLE_COVERAGE=On && make && make test
   - make gcov
   - make lcov
+  - cd -
   - coverage run run.py
   - codecov
 
