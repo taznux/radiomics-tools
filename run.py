@@ -124,7 +124,8 @@ def make_pipeline_lungx():
 
     # TODO : change to originate operator
     pipeline.files(task_dicom_to_nrrd_convert,
-                   task_load_dicom_list)
+                   task_load_dicom_list) \
+        .follows(mkdir(image_path))
 
     pipeline.subdivide(name="task_nodule_segmentation",
                        task_func=task_nodule_segmentation,
@@ -134,15 +135,14 @@ def make_pipeline_lungx():
                        # after '_' will be index of nodule which is some digit
                        extras=["{basename[0]}",
                                output_path + "/" + experiment_set + "/{basename[0]}_"]) \
-        .follows(mkdir(image_path))
+        .follows(mkdir(output_path), mkdir(output_path + "/" + experiment_set))
 
     pipeline.transform(name="task_feature_extraction",
                        task_func=task_feature_extraction,
                        input=output_from("task_nodule_segmentation"),
                        filter=formatter(),
                        output=output_path + "/" + experiment_set + "/{basename[0]}.txt",
-                       extras=["{path[0]}/{basename[0]}.nrrd"]) \
-        .follows(mkdir(output_path), mkdir(output_path + "/" + experiment_set))
+                       extras=["{path[0]}/{basename[0]}.nrrd"])
 
     pipeline.merge(name="task_feature_organization",
                    task_func=task_feature_organization,
