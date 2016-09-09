@@ -69,7 +69,7 @@ script:
   - make gcov
   - make lcov
   - cd -
-  - python download_lungx_tcia.py
+  - python3 download_lungx_tcia.py
   - coverage run run.py
   - codecov
 
