@@ -15,4 +15,6 @@ SET (BUILD_SHARED_LIBS OFF)
 SET (CMAKE_VERBOSE_MAKEFILE OFF)
 
 find_package(codecov)
-add_coverage(ITKUtils)
+if(codecov_FOUND)
+  add_coverage(ITKUtils)
+endif()

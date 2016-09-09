@@ -47,4 +47,6 @@ add_subdirectory(Tools)
 
 
 # evaluate coverage
-coverage_evaluate()
+if(codecov_FOUND)
+  coverage_evaluate()
+endif()

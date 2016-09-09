@@ -65,6 +65,10 @@ before_script:
   - cd -
   - sh install_modules.sh
   - python3 -m pip install codecov
+  - python3 setup.py install
+  - cd external/TCIAExplorer
+  - python3 setup.py install
+  - cd - 
 
 script:
   - mkdir build
@@ -75,6 +79,6 @@ script:
   - cd -
   - coverage run run.py
   - codecov
-  
+
 after_success:
   - bash <(curl -s https://codecov.io/bash) -X gcov
