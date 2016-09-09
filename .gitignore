@@ -2,8 +2,9 @@ DICOM
 software
 Documents
 References
-LIB
-BIN
+lib
+bin
+build
 DATA
 output*
 old*
