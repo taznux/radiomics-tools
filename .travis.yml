@@ -64,12 +64,13 @@ before_script:
   - make --jobs=$NUM_THREADS --keep-going
   - cd -
   - sh install_modules.sh
+  - python3 -m pip install codecov
 
 script:
   - cd Tools
   - make --jobs=$NUM_THREADS --keep-going all
   - cd -
-  - python3 run.py
+  - coverage run run.py
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
+  - codecov
