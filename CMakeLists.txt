@@ -37,14 +37,18 @@ enable_testing()
 
 
 # enable code coverage
-find_package(codecov)
+if(EXISTS "${CMAKE_SOURCE_DIR}/externals/CMake-codecov/cmake")
+  find_package(codecov)
+  set(codecov_FOUND True)
+else ()
+  set(codecov_FOUND False)
+endif ()
 
 
 #
 # recurse into subdirectories
 #
 add_subdirectory(Tools)
-
 
 # evaluate coverage
 if(codecov_FOUND)
