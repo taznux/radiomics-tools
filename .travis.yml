@@ -69,8 +69,11 @@ before_script:
 script:
   - cd Tools
   - make --jobs=$NUM_THREADS --keep-going all
+  - sh ../get_code_cov.sh
   - cd -
   - coverage run run.py
+  - codecov
 
 after_success:
-  - codecov
+  - bash <(curl -s https://codecov.io/bash)
+  
