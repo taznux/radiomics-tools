@@ -14,4 +14,6 @@ SET (CMAKE_VERBOSE_MAKEFILE OFF)
 TARGET_LINK_LIBRARIES(NoduleSegmentation ${ITK_LIBRARIES} ITKUtils)
 
 find_package(codecov)
-add_coverage(NoduleSegmentation)
+if(codecov_FOUND)
+  add_coverage(NoduleSegmentation)
+endif()

@@ -5,6 +5,7 @@ References
 lib
 bin
 build
+dist
 DATA
 output*
 old*
@@ -35,5 +36,6 @@ CMakeCache.txt
 *.asv
 *.log
 *.csv
+*.egg*
 ~*
 .ruffus_history.sqlite*
