@@ -13,8 +13,8 @@ import metadata
 ################################################################################
 # Set your environmental parameters
 ################################################################################
-# experiment_set = 'TrainingSet'
-experiment_set = 'TestSet'
+experiment_set = 'TrainingSet'
+#experiment_set = 'TestSet'
 output_path = 'output'
 data_path = 'DATA'
 dicom_path = data_path + '/DOI'
@@ -159,7 +159,7 @@ if __name__ == "__main__":
 
     # pipeline_lungx._printout_graph("flowchart.png")
     pipeline_lungx.printout(sys.stdout, verbose=6)
-    pipeline_lungx.run(multiprocess=6)
+    pipeline_lungx.run(multiprocess=3)
 
 
 # TODO : bugfix ruffus task.py      5774:           job_result = ii.next(timeout=999999990->9999)
