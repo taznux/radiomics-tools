@@ -162,6 +162,11 @@ if __name__ == "__main__":
 
     # pipeline_lungx._printout_graph("flowchart.png")
     pipeline_lungx.printout(sys.stdout, verbose=6)
+<<<<<<< HEAD:run.py
     pipeline_lungx.run(multiprocess=multiprocessing.cpu_count()-1)
+=======
+    pipeline_lungx.run(multiprocess=3)
+
+>>>>>>> master:script/run_lungx.py
 
 # TODO : bugfix ruffus task.py      5774:           job_result = ii.next(timeout=999999990->9999)
