@@ -116,7 +116,7 @@ Radiomics feature extraction pipeline example for LUNGx dataset
   > nodule_info_path = './' + experiment_set + '.csv'  
 
 3. Run radiomics pipeline
-  > $ python run.py or ./run.py
+  > $ python script/run_lungx.py or script/run_lungx.py
 
 4. Analysis feature data
   output files (intermediate images and feature data) will be generated in ./output  
