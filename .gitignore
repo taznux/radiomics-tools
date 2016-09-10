@@ -5,6 +5,7 @@ References
 lib
 bin
 build
+super-build
 dist
 DATA
 output*

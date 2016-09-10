@@ -4,8 +4,14 @@ Radiomics tools
 
 Image processing tools and ruffus based pipeline for radiomics feature analysis
 
+Super build
+--------------------------
+Just run super-build.sh
+
+
 Install software
 --------------------------
+
 ### Python 3.5 ###
   - Required
   - Script engine and useful modules
@@ -14,7 +20,6 @@ Install software
   https://www.python.org/downloads/
 
   > Required modules - pandas, ruffus, SimpleITK, scipy, numpy, ipython, matplotlib
-  >
   > install_modules.sh or install_modules.cmd is available to install these modules using conda.
 
 ### Slicer 4.5 ###
@@ -24,10 +29,12 @@ Install software
   http://download.slicer.org/
 
 
-### To build  ###
+### Build  ###
   - gcc or visual studio
   - cmake
   - ITK
+
+  > ./build.sh
 
 
 Tools

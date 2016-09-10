@@ -1,5 +1,4 @@
-git submodule init && git submodule update
-mkdir build
+if ! test -d build; then mkdir build; fi
 cd build
 cmake .. && make
 cd ..

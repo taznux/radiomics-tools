@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from tciaexplorer import TciaExplorer
 import os
 import json
