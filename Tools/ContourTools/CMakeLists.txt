@@ -42,7 +42,7 @@ TARGET_LINK_LIBRARIES(GTVs2ITV ${ITK_LIBRARIES} ITKUtils)
 TARGET_LINK_LIBRARIES(HoleGenerator ${ITK_LIBRARIES} ITKUtils)
 TARGET_LINK_LIBRARIES(STAPLEComparison ${ITK_LIBRARIES} ITKUtils)
 
-find_package(codecov)
+
 if(codecov_FOUND)
   add_coverage(ROIGenerator)
   add_coverage(ROICropImage)

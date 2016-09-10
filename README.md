@@ -102,11 +102,11 @@ Radiomics feature extraction pipeline example for LUNGx dataset
 1. Download DICOM images  
   https://wiki.cancerimagingarchive.net/display/Public/SPIE-AAPM+Lung+CT+Challenge  
 
-  Download all DICOM images to './DATA'  
+  Download all DICOM images to 'DATA'  
   You can use the included metadata files for LUNGx (TrainingSet.csv and TestSet.csv)  
 
 2. Environmental parameters  
-  Set your parameters in run_CAD.py (recommend default setting).  
+  Set your parameters in script/run_lungx.py (recommend default setting).  
   > experiment_set = 'TrainingSet'  
   > \# experiment_set = 'TestSet'  
   > output_path = 'output'  
@@ -116,9 +116,9 @@ Radiomics feature extraction pipeline example for LUNGx dataset
   > nodule_info_path = './' + experiment_set + '.csv'  
 
 3. Run radiomics pipeline
-  > $ python run.py or ./run.py
+  > $ python script/run_lungx.py or script/run_lungx.py
 
 4. Analysis feature data
-  output files (intermediate images and feature data) will be generated in ./output  
+  output files (intermediate images and feature data) will be generated in output  
   > TrainingSet              feature_list_TrainingSet.csv
   > TestSet                  feature_list_TestSet.csv

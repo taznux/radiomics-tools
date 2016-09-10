@@ -43,7 +43,7 @@ TARGET_LINK_LIBRARIES(DICOM-RT2NRRDConverter ${ITK_LIBRARIES})
 TARGET_LINK_LIBRARIES(DICOMTagReader ${ITK_LIBRARIES})
 
 
-find_package(codecov)
+
 if(codecov_FOUND)
   add_coverage(DICOM2NRRDConverter)
   add_coverage(DICOM2NRRDConverterHCC)

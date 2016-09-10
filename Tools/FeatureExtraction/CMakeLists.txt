@@ -18,7 +18,7 @@ SET (CMAKE_VERBOSE_MAKEFILE OFF)
 
 TARGET_LINK_LIBRARIES(FeatureExtraction ${ITK_LIBRARIES} ITKUtils)
 
-find_package(codecov)
+
 if(codecov_FOUND)
   add_coverage(FeatureExtraction)
 endif()
