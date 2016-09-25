@@ -22,20 +22,22 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
       curl "http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -o miniconda_install.sh
   fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-  curl "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o Miniconda_Install.sh
+  curl "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o miniconda_install.sh
   if [ $? -ne 0 ]; then
-      curl "http://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o Miniconda_Install.sh
+      curl "http://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o miniconda_install.sh
   fi
 fi
 set -e
 
-bash miniconda_install.sh -b -f -p "$(pwd)/miniconda/"
+bash miniconda_install.sh -b -f -p "${SUPERBUILD_DIR}/miniconda/"
 
 # Activate the new environment
 PATH=${SUPERBUILD_DIR}"/miniconda/bin":$PATH
 
 # install python modules
 bash ${PROJECT_DIR}/install_modules.sh
+
+conda install cryptography
 
 cd ${PROJECT_DIR}/externals/TCIAExplorer
 python3 setup.py install
