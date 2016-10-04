@@ -354,10 +354,17 @@ int main(int argc, char *argv[])
 
 
 		string name = inputLabelImageNames[i];
-		if (name.length() > 15 + 11) // TODO: change 15 to startng point of the filename
-		{
-			name = inputLabelImageNames[i].substr(inputLabelImageNames[i].length() - 15 - 11, 15); // post 11 -> -label.nrrd
-		}
+#ifdef WIN32
+		size_t found = name.rfind("\\");
+#else
+		size_t found = name.rfind("\\");
+#endif
+
+		if (found >= 0)
+			name = inputLabelImageNames[i].substr(found+1, inputLabelImageNames[i].length()-(found+1)-11); // post 11 -> -label.nrrd
+		else
+			name = inputLabelImageNames[i].substr(0, inputLabelImageNames[i].length()-11); // post 11 -> -label.nrrd
+
 		//string name = inputLabelImageNames[i];
 		//avg_q += sFilter->GetSpecificity(i);
 		//avg_p += sFilter->GetSensitivity(i);
