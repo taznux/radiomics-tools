@@ -366,6 +366,7 @@ void LoadVectorIntoFile(const char *fnLoad, std::vector<VType> &vec, const long 
 }
 }// douher
 
+MaskImageType::Pointer GetMaskImage(LabelImageType::Pointer);
 MaskImageType::Pointer GetMaskImage(LabelImageType::Pointer, LabelPixelType);
 
 MaskImageType::RegionType RoiIndexToRegion(MaskImageType::IndexType, MaskImageType::IndexType);

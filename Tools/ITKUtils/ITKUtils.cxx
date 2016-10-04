@@ -4,6 +4,32 @@
 
 #include "ITKUtils.h"
 
+MaskImageType::Pointer GetMaskImage(LabelImageType::Pointer labelImage)
+{
+	MaskImageType::Pointer maskImage = MaskImageType::New();
+	maskImage->SetRegions(labelImage->GetRequestedRegion());
+	maskImage->CopyInformation(labelImage);
+	maskImage->Allocate();
+
+	itk::ImageRegionIterator< LabelImageType > label(labelImage, labelImage->GetBufferedRegion());
+	itk::ImageRegionIterator< MaskImageType > mask(maskImage, maskImage->GetBufferedRegion());
+
+	for (label.GoToBegin(), mask.GoToBegin(); !label.IsAtEnd(); ++label, ++mask)
+	{
+		LabelImageType::PixelType color = label.Get();
+		if (color > 0)
+		{
+			mask.Set(maskValue);
+		}
+		else
+		{
+			mask.Set(0);
+		}
+	}
+
+	return maskImage;
+}
+
 MaskImageType::Pointer GetMaskImage(LabelImageType::Pointer labelImage, LabelPixelType selectedLabelValue)
 {
     MaskImageType::Pointer maskImage = MaskImageType::New();
