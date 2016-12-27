@@ -58,7 +58,9 @@ before_script:
 - conda update -q conda
 # Useful for debugging any issues with conda
 - conda info -a
-- sh install_modules.sh
+- conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
+- conda install --yes -c bioconda ruffus
+- conda install --yes -c SimpleITK SimpleITK
 - python3 -m pip install codecov
 - cd externals/TCIAExplorer
 - python3 setup.py install
