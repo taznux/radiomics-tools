@@ -35,12 +35,12 @@ bash miniconda_install.sh -b -f -p "${SUPERBUILD_DIR}/miniconda/"
 PATH=${SUPERBUILD_DIR}"/miniconda/bin":$PATH
 
 # install python modules
-bash ${PROJECT_DIR}/install_modules.sh
+! bash ${PROJECT_DIR}/install_modules.sh
 
-conda install cryptography
+! conda install cryptography
 
 cd ${PROJECT_DIR}/externals/TCIAExplorer
-python3 setup.py install
+! python3 setup.py install
 cd -
 
 
