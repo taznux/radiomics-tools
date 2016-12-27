@@ -54,5 +54,5 @@ cd -
 
 if ! test -d build; then mkdir build; fi
 cd build
-cmake ${PROJECT_DIR} && make
+cmake ${PROJECT_DIR} -DITK_DIR=${ITK_BUILD_DIR} && make
 cd ${PROJECT_DIR}
