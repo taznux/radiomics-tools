@@ -31,7 +31,7 @@ cache:
   - $HOME/itk-v4.10.0
   - $HOME/itk-v4.10.0-build
 before_install:
-- if ! test $TRAVIS_OS_NAME == osx ; then brew update; brew install python3 lcov; brew
+- if test $TRAVIS_OS_NAME == osx ; then brew update; brew install python3 lcov; brew
   upgrade libpng; fi
 before_script:
 - export NUM_THREADS=4
