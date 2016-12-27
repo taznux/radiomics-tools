@@ -1,22 +1,20 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""
-This is a script file for image resample with reference image.
+"""This is a script file for image resample with reference image.
 """
 
 import SimpleITK as sitk
 import sys
 
+from qradiomics.io import *
 
 def image_resample(input_image, reference, is_label):
-    """
-    
-    Image resampling with reference information
-    
-    :param input_image: input image 
+    """Image resampling with reference information
+
+    :param input_image: input image
     :param reference: reference image or reference spacing
-    :param is_label: input image type - label map or typical image 
+    :param is_label: input image type - label map or typical image
     :return: resampled image
     """
     resample_filter = sitk.ResampleImageFilter()
@@ -107,4 +105,4 @@ if __name__ == "__main__":
 
         output_image = image_resample(input_image, ref_spacing, is_label)
 
-    sitk.WriteImage(output_image, output_filename, True)
+    image_write(output_image, output_filename)

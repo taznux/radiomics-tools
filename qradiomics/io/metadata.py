@@ -10,8 +10,7 @@ metadata = pandas.DataFrame()
 
 
 def load_metadata(metadata_path):
-    """
-    load metadata file
+    """load metadata file
 
     :param metadata_path: a path for metadata file
     """
@@ -25,9 +24,8 @@ def load_metadata(metadata_path):
     #print(metadata)
 
 
-def getPatient(pid):
-    """
-    To access an individual patient's information with pid
+def get_patient(pid):
+    """To access an individual patient's information with pid
 
     :param pid: unique patient ID
     :return: metadata of the patient in dictionary structure

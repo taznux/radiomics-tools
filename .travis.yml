@@ -46,16 +46,31 @@ before_script:
   -DModule_ITKReview=ON
 - make --jobs=$NUM_THREADS --keep-going
 - cd -
-- sh install_modules.sh
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
+    curl "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -o miniconda_install.sh;
+  elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+    curl "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o Miniconda_Install.sh;
+  fi
+- bash miniconda_install.sh -b -f -p "$HOME/miniconda/"
+- export PATH="$HOME/miniconda/bin:$PATH"
+- hash -r
+- conda config --set always_yes yes --set changeps1 no
+- conda update -q conda
+# Useful for debugging any issues with conda
+- conda info -a
+- conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
+- conda install --yes -c bioconda ruffus
+- conda install --yes -c SimpleITK SimpleITK
 - python3 -m pip install codecov
 - cd externals/TCIAExplorer
 - python3 setup.py install
 - cd -
+- python3 setup.py install
 - python3 script/download_lungx_tcia.py
 script:
 - if ! test -d build; then mkdir build; fi
 - cd build
-- cmake .. -DENABLE_COVERAGE=On && make && make test && cd - && coverage run script/run_lungx.py
+- cmake .. -DENABLE_COVERAGE=On -DITK_DIR=${ITK_BUILD_DIR} && make && make test && cd - && coverage run script/run_lungx.py
   && cd build
 - make gcov
 - make lcov
