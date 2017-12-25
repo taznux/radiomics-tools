@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 export NUM_THREADS=4
-export ITK_VERSION=v4.10.0
+export ITK_VERSION=v4.13.0
 export PROJECT_DIR="$(pwd)"
 export SUPERBUILD_DIR=${PROJECT_DIR}/super-build
 export ITK_SOURCE_DIR=${SUPERBUILD_DIR}/itk-${ITK_VERSION}
