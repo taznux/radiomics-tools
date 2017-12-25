@@ -9,7 +9,7 @@ import os
 import sys
 import glob
 
-parameter_list = ['No.', 'PID']
+parameter_list = ['No.', 'PID', 'Image', 'Tags']
 shape_feature = ['PhysicalSize', 'BoundingBoxVolume', 'BoundingBoxSize1', 'BoundingBoxSize2', 'BoundingBoxSize3',
                  'OrientedBoundingBoxVolume', 'OrientedBoundingBoxSize1', 'OrientedBoundingBoxSize2',
                  'OrientedBoundingBoxSize3', 'EquivalentEllipsoidDiameter1', 'EquivalentEllipsoidDiameter2',
@@ -182,19 +182,21 @@ def organize(input_files, output, parameter_list, feature_list):
         print(f)
         path = os.path.dirname(f)
         strs = os.path.basename(f).replace(".txt", "").split("_")
-        name = '_'.join(strs[1:len(strs)])
         pid = strs[0]
+        image = strs[1]
+
 
         fw.write(str(no) + ',')
         fw.write(pid + ',')
-        fw.write(name + ',')
+        fw.write(image + ',')
+        if len(parameter_list) > 3:
+            tags = '_'.join(strs[2:len(strs)])
+            fw.write(tags + ',')
         no += 1
 
         file_name = f
         values = ','.join(feature_parsing(file_name, feature_list))
-        fw.write(values + ',')
-
-        fw.write('\n')
+        fw.write(values+'\n')
 
     fw.close()
 

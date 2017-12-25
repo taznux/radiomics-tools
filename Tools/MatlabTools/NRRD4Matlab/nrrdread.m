@@ -69,7 +69,9 @@ while (true)
   meta(1).(field) = value;
   
 end
-
+if ~isfield(meta, 'endian')
+    meta.endian = 'little';
+end
 datatype = getDatatype(meta.type);
 
 % Get the size of the data.
