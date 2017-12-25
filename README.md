@@ -12,7 +12,7 @@ Just run super-build.sh
 Install software
 --------------------------
 
-### Python 3.5 ###
+### Python 3.6 ###
   - Required
   - Script engine and useful modules
 
@@ -22,7 +22,7 @@ Install software
   > Required modules - pandas, ruffus, SimpleITK, scipy, numpy, ipython, matplotlib
   > install_modules.sh or install_modules.cmd is available to install these modules using conda.
 
-### Slicer 4.5 ###
+### Slicer 4.8 ###
   - Recommended  
   - Image viewer, contour editor, simple image processing tool  
 
@@ -32,7 +32,7 @@ Install software
 ### Build  ###
   - gcc or visual studio
   - cmake
-  - ITK
+  - ITK 4.13.0
 
   > ./build.sh
 
