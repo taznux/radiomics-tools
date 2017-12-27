@@ -10,23 +10,33 @@ addons:
     - python3-pip
     - python3-yaml
     - lcov
-    - libinsighttoolkit4-dev
 matrix:
   include:
   - os: osx
     compiler: clang
-    env: TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.0 TRAVIS_PYTHON_VERSION=3.6
   - os: linux
     compiler: gcc
-    env: TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.0 TRAVIS_PYTHON_VERSION=3.6
+cache:
+- directories:
+  - $HOME/itk-v4.13.0
+  - $HOME/itk-v4.13.0-build
 before_install:
-- if test $TRAVIS_OS_NAME == osx ; then 
-    brew update;
-    brew tap homebrew/homebrew-science;
-    brew install python3 lcov insighttoolkit || brew upgrade libpng;
-  fi
+- if test $TRAVIS_OS_NAME == osx ; then brew update && brew install python3 lcov || brew upgrade libpng; fi
 before_script:
 - export NUM_THREADS=4
+- export ITK_SOURCE_DIR=$HOME/itk-${ITK_VERSION}
+- export ITK_BUILD_DIR=${ITK_SOURCE_DIR}-build
+- if ! test -e ${ITK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $ITK_SOURCE_DIR; fi
+- if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} git://itk.org/ITK.git
+  ${ITK_SOURCE_DIR}; fi
+- if ! test -d ${ITK_BUILD_DIR}; then mkdir ${ITK_BUILD_DIR}; fi
+- cd ${ITK_BUILD_DIR}
+- cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF
+  -DModule_ITKReview=ON
+- make --jobs=$NUM_THREADS --keep-going
+- cd -
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
     curl "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -o miniconda_install.sh;
   elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
