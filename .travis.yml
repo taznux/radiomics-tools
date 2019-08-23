@@ -34,7 +34,7 @@ before_script:
 - if ! test -d ${ITK_BUILD_DIR}; then mkdir ${ITK_BUILD_DIR}; fi
 - cd ${ITK_BUILD_DIR}
 - cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF
-  -DModule_ITKReview=ON
+  -DModule_ITKReview=ON -DModule_LesionSizingToolkit=ON
 - make --jobs=$NUM_THREADS --keep-going
 - cd -
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
