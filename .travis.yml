@@ -20,8 +20,10 @@ matrix:
     env: ITK_VERSION=v4.13.0 VTK_VERSION=v8.2.0 TRAVIS_PYTHON_VERSION=3.6
 cache:
 - directories:
-  - $HOME/itk-v4.13.0
-  - $HOME/itk-v4.13.0-build
+  - $HOME/itk-${ITK_VERSION}
+  - $HOME/itk-${ITK_VERSION}-build
+  - $HOME/vtk-${VTK_VERSION}
+  - $HOME/vtk-${VTK_VERSION}-build
 before_install:
 - if test $TRAVIS_OS_NAME == osx ; then brew update && brew install python3 lcov || brew upgrade libpng; fi
 before_script:
