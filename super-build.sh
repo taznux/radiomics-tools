@@ -2,10 +2,13 @@
 
 export NUM_THREADS=4
 export ITK_VERSION=v4.13.0
+export VTK_VERSION=v8.2.0
 export PROJECT_DIR="$(pwd)"
 export SUPERBUILD_DIR=${PROJECT_DIR}/super-build
 export ITK_SOURCE_DIR=${SUPERBUILD_DIR}/itk-${ITK_VERSION}
+export VTK_SOURCE_DIR=${SUPERBUILD_DIR}/vtk-${VTK_VERSION}
 export ITK_BUILD_DIR=${ITK_SOURCE_DIR}-build
+export VTK_BUILD_DIR=${VTK_SOURCE_DIR}-build
 
 
 if ! test -d ${SUPERBUILD_DIR}; then mkdir ${SUPERBUILD_DIR}; fi
@@ -43,12 +46,19 @@ cd ${PROJECT_DIR}/externals/TCIAExplorer
 ! python3 setup.py install
 cd -
 
+if ! test -e ${VTK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $VTK_SOURCE_DIR; fi
+if ! test -d ${VTK_SOURCE_DIR}; then git clone --branch ${VTK_VERSION} git://vtk.org/VTK.git ${VTK_SOURCE_DIR}; fi
+if ! test -d ${VTK_BUILD_DIR}; then mkdir ${VTK_BUILD_DIR}; fi
+cd ${VTK_BUILD_DIR}
+cmake ${VTK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF 
+make --jobs=${NUM_THREADS} --keep-going
+cd -
 
 if ! test -e ${ITK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $ITK_SOURCE_DIR; fi
 if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} git://itk.org/ITK.git ${ITK_SOURCE_DIR}; fi
 if ! test -d ${ITK_BUILD_DIR}; then mkdir ${ITK_BUILD_DIR}; fi
 cd ${ITK_BUILD_DIR}
-cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DModule_ITKReview=ON
+cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DModule_ITKReview=ON -DModule_LesionSizingToolkit=ON
 make --jobs=${NUM_THREADS} --keep-going
 cd -
 
