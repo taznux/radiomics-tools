@@ -497,27 +497,34 @@ int main(int argc, char *argv[])
     }
     const gdcm::DataElement &csq = nestedds.GetDataElement( tcsq );
 
-    gdcm::SmartPointer<gdcm::SequenceOfItems> sqi2 = csq.GetValueAsSQ();
-    if ( !sqi2 || !sqi2->GetNumberOfItems() )
-    {
-      std::cout << "csq: " << csq << std::endl;
-      std::cout << "sqi2: " << *sqi2 << std::endl;
-      std::cout << "Did not find sqi2 or no. items == 0   " <<  sqi2->GetNumberOfItems() << "   continuing..." << std::endl;
-      continue;
-    }
-    unsigned int nitems = sqi2->GetNumberOfItems();
-    std::cout << "Structure " << pd << ". Number of regions: " << nitems << std::endl;
     std::string str_currentOrgan(sde.GetByteValue()->GetPointer(), sde.GetByteValue()->GetLength());
-    std::string target_contour = argv[4];
+	
+	//trim to remove spaces in organ name which can cause problems in scripts eg. "CBCT01__BULK  BONE .nii" .  Might need to have this as parameter?
+	trim(str_currentOrgan);
+	if(argc > 4)
+	{
+		std::string target_contour = argv[4];
 
-    //trim to remove spaces in organ name which can cause problems in scripts eg. "CBCT01__BULK  BONE .nii" .  Might need to have this as parameter?
-    trim (str_currentOrgan);
-    trim (target_contour);
-    if (argc > 3 && str_currentOrgan.compare(target_contour) != 0)
-    {
-      continue;
-    }
+		trim (target_contour);
+		if (str_currentOrgan.compare(target_contour) != 0)
+		{
+		  continue;
+		}
+	}
     std::cout << pd << ". Structure name: " << str_currentOrgan << std::endl;
+
+	gdcm::SmartPointer<gdcm::SequenceOfItems> sqi2 = csq.GetValueAsSQ();
+	if (!sqi2 || !sqi2->GetNumberOfItems())
+	{
+		std::cout << "csq: " << csq << std::endl;
+		if (sqi2) {
+			std::cout << "sqi2: " << *sqi2 << std::endl;
+			std::cout << "Did not find sqi2 or no. items == 0   " << sqi2->GetNumberOfItems() << "   continuing..." << std::endl;
+		}
+		continue;
+	}
+	unsigned int nitems = sqi2->GetNumberOfItems();
+	std::cout << "Structure " << pd << ". Number of regions: " << nitems << std::endl;
 
     //now loop through each item for this structure (eg one prostate region on a single slice is an item)
     for (unsigned int i = 0; i < nitems; ++i)
@@ -571,11 +578,11 @@ int main(int argc, char *argv[])
     std::string strNewVolume;
     strNewVolume = argv[3];
     strNewVolume += "_";
-    if (argc > 4)
+    if (argc > 5)
       strNewVolume += argv[5];
     else
       strNewVolume += str_currentOrgan;
-    strNewVolume += ".nrrd";
+    strNewVolume += "-label.nrrd";
 
     writeFile(image, strNewVolume);
     resetImage( image);  //reset the temporary volume ready for next structure (if any)

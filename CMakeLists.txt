@@ -1,4 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
+#
+# project information
+#
+if (${CMAKE_MAJOR_VERSION} EQUAL 3)
+	project("radiomics-tools" LANGUAGES CXX)
+else ()
+	project("radiomics-tools" CXX)
+endif ()
 
 #------------------------------------------------
 # ITK
@@ -12,21 +20,12 @@ else(ITK_FOUND)
     "Cannot build Application without ITK. Please set ITK_DIR.")
 endif(ITK_FOUND)
 
-
 # choose new behaviour for CMP0042
 # see http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html for more details
 if (POLICY CMP0042)
 	cmake_policy(SET CMP0042 NEW)
 endif (POLICY CMP0042)
 
-#
-# project information
-#
-if (${CMAKE_MAJOR_VERSION} EQUAL 3)
-	project("radiomics-tools" LANGUAGES CXX)
-else ()
-	project("radiomics-tools" CXX)
-endif ()
 
 #
 # cmake configuration
