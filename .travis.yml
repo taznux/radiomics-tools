@@ -57,12 +57,12 @@ before_script:
 - python3 setup.py install
 - cd -
 - python3 setup.py install
-- #python3 script/download_lungx_tcia.py
+- python3 script/download_lungx_tcia.py
 script:
 - if ! test -d build; then mkdir build; fi
 - cd build
-- cmake .. -DENABLE_COVERAGE=On -DITK_DIR=${ITK_BUILD_DIR} && make && make test && cd - && cd build
-#- cmake .. -DENABLE_COVERAGE=On -DITK_DIR=${ITK_BUILD_DIR} && make && make test && cd - && coverage run script/run_lungx.py && cd build
+#- cmake .. -DENABLE_COVERAGE=On -DITK_DIR=${ITK_BUILD_DIR} && make && make test && cd - && cd build
+- cmake .. -DENABLE_COVERAGE=On -DITK_DIR=${ITK_BUILD_DIR} && make && make test && cd - && coverage run script/run_lungx.py && cd build
 - make gcov
 - make lcov
 - cd -
