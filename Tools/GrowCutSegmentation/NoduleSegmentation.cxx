@@ -5,7 +5,7 @@
 #include "itkImageFileReader.h"
 #include "itkImageFileWriter.h"
 
-#include "itkConstantPadImageFilter.h"
+#include "itkImageSpatialObject.h"
 
 #include "itkImageRegionConstIterator.h"
 #include "itkImageRegionIterator.h"
@@ -14,8 +14,8 @@
 #include "itkBinaryBallStructuringElement.h"
 #include "itkBinaryErodeImageFilter.h"
 #include "itkBinaryDilateImageFilter.h"
-#include "itkBinaryMorphologicalClosingImageFilter.h"
-#include "itkBinaryMorphologicalOpeningImageFilter.h"
+#include "itkBinaryClosingByReconstructionImageFilter.h"
+#include "itkBinaryOpeningByReconstructionImageFilter.h"
 
 #include "itkAreaOpeningImageFilter.h"
 
@@ -41,13 +41,16 @@
 #include "itkImageDuplicator.h"
 
 #include "itkCurvatureAnisotropicDiffusionImageFilter.h"
+#include "itkIsotropicResamplerImageFilter.h"
+
+#include "itkSatoVesselnessSigmoidFeatureGenerator.h"
 
 #include "itkGrowCutSegmentationImageFilter.h"
 
 using namespace std;
 
 // Definition of Data type
-typedef float InputPixelType;
+typedef signed short InputPixelType;
 typedef unsigned char OutputPixelType;
 typedef float InternalPixelType;
 
@@ -57,87 +60,93 @@ typedef itk::Image<OutputPixelType, 3> OutImageType;
 typedef itk::Image<OutputPixelType, 2> OutImage2DType;
 typedef itk::Image<InternalPixelType, 3> WeightImageType;
 
+
 // Definition of IO
-typedef itk::ImageFileReader< InImageType > InImageReaderType;
-typedef itk::ImageFileWriter< InImageType > InImageWriterType;
-typedef itk::ImageFileWriter< WeightImageType > WeightImageWriterType;
-typedef itk::ImageFileWriter< OutImageType> OutImageWriterType;
+typedef itk::ImageFileReader<InImageType> InImageReaderType;
+typedef itk::ImageFileWriter<InImageType> InImageWriterType;
+typedef itk::ImageFileWriter<WeightImageType> WeightImageWriterType;
+typedef itk::ImageFileWriter<OutImageType> OutImageWriterType;
 
-typedef itk::ImageDuplicator< OutImageType > DuplicatorType;
+typedef itk::ImageDuplicator<OutImageType> DuplicatorType;
 
-typedef itk::RegionOfInterestImageFilter< InImageType, InImageType > RoiFilterType;
+typedef itk::RegionOfInterestImageFilter<InImageType, InImageType> RoiFilterType;
 
 
-typedef itk::BinaryBallStructuringElement< OutputPixelType, 3 > StructuringElementType;
-typedef itk::BinaryBallStructuringElement< OutputPixelType, 2 > StructuringElement2DType;
+typedef itk::BinaryBallStructuringElement<OutputPixelType, 3> StructuringElementType;
+typedef itk::BinaryBallStructuringElement<OutputPixelType, 2> StructuringElement2DType;
 typedef itk::BinaryDilateImageFilter<OutImageType, OutImageType, StructuringElementType> DilateFilterType;
 typedef itk::BinaryErodeImageFilter<OutImageType, OutImageType, StructuringElementType> ErodeFilterType;
 
-typedef itk::BinaryMorphologicalClosingImageFilter<OutImage2DType, OutImage2DType, StructuringElement2DType> ClosingFilter2DType;
-typedef itk::BinaryMorphologicalOpeningImageFilter<OutImage2DType, OutImage2DType, StructuringElement2DType> OpeningFilter2DType;
+typedef itk::BinaryClosingByReconstructionImageFilter<OutImage2DType, StructuringElement2DType> ClosingFilter2DType;
+typedef itk::BinaryOpeningByReconstructionImageFilter<OutImage2DType, StructuringElement2DType> OpeningFilter2DType;
 
 
-typedef itk::SliceBySliceImageFilter< OutImageType, OutImageType> SliceBySliceFilterType;
-typedef itk::BinaryFillholeImageFilter<OutImage2DType > FillholeFilter2DType;
+typedef itk::SliceBySliceImageFilter<OutImageType, OutImageType> SliceBySliceFilterType;
+typedef itk::BinaryFillholeImageFilter<OutImage2DType> FillholeFilter2DType;
 
-typedef itk::AreaOpeningImageFilter <OutImageType, OutImageType> AreaOpeningImageFilterType;
-typedef itk::ConnectedComponentImageFilter <OutImageType, OutImageType> ConnectedComponentImageFilterType;
+typedef itk::AreaOpeningImageFilter<OutImageType, OutImageType> AreaOpeningImageFilterType;
+typedef itk::ConnectedComponentImageFilter<OutImageType, OutImageType> ConnectedComponentImageFilterType;
 
-typedef itk::CurvatureAnisotropicDiffusionImageFilter<InImageType, WeightImageType > DiffusionFilterType;
+typedef itk::CurvatureAnisotropicDiffusionImageFilter<WeightImageType, WeightImageType> DiffusionFilterType;
+typedef itk::IsotropicResamplerImageFilter<InImageType, WeightImageType> IsotropicResamplerType;
+typedef itk::SatoVesselnessSigmoidFeatureGenerator<3> VesselnessGeneratorType;
+typedef VesselnessGeneratorType::SpatialObjectType SpatialObjectType;
+typedef VesselnessGeneratorType::InputImageSpatialObjectType InputImageSpatialObjectType;
+typedef itk::ImageSpatialObject<VesselnessGeneratorType::Dimension, InternalPixelType>  OutputImageSpatialObjectType;
 
-typedef itk::BinaryThresholdImageFilter <WeightImageType, OutImageType >  ThresholdFilterType;
-typedef itk::ConnectedComponentImageFilter <OutImageType, OutImageType > ConnectedComponentImageFilterType;
+
+typedef itk::BinaryThresholdImageFilter<WeightImageType, OutImageType>  ThresholdFilterType;
+typedef itk::ConnectedComponentImageFilter<OutImageType, OutImageType> ConnectedComponentImageFilterType;
 
 typedef itk::GrowCutSegmentationImageFilter<WeightImageType, OutImageType> GrowCutFilterType;
 
-typedef itk::SubtractImageFilter< OutImageType, OutImageType, OutImageType > SubFilterType;
+typedef itk::SubtractImageFilter<OutImageType, OutImageType, OutImageType> SubFilterType;
 
 // To print the progress
 class ShowProgressObject
 {
 public:
-    ShowProgressObject( itk::ProcessObject *o )
+    ShowProgressObject(itk::ProcessObject * o)
     {
         m_Process = o;
     }
-    void ShowProgress()
+
+    void
+    ShowProgress()
     {
         cout << "\rProgress: "
-                  << static_cast<unsigned int>( 100.0 * m_Process->GetProgress() ) << "%";
-		if(m_Process->GetProgress() == 1)
-		{
-			cout << endl;
-		}
+             << static_cast<unsigned int>(100.0 * m_Process->GetProgress()) << "%";
+        if (m_Process->GetProgress() == 1) {
+            cout << endl;
+        }
     }
+
     itk::ProcessObject::Pointer m_Process;
 };
 
 
-int main( int argc, char *argv[] )
+int
+main(int argc, char * argv[])
 {
-    if ( argc < 8 )
-    {
+    if (argc < 8) {
         cerr << "Missing Parameters " << endl;
         cerr << "Usage: " << argv[0];
         cerr << " InputImageFile SeedPoint[x y z] NoduleSize[long short] OutputImageFile" << endl;
         return EXIT_FAILURE;
     }
 
-    unsigned int x = atoi( argv[2] );
-    unsigned int y = atoi( argv[3] );
-    int sliceNumber = atoi( argv[4] );
-    double longD = atof( argv[5] );
-    double shortD = atof( argv[6] );
-
-    if (longD <= 10) shortD = longD * 0.8;
-    if (shortD < 4) shortD = 4;
+    const unsigned int x  = atoi(argv[2]);
+    const unsigned int y  = atoi(argv[3]);
+    const int sliceNumber = atoi(argv[4]);
+    double longD  = atof(argv[5]);
+    double shortD = atof(argv[6]);
 
     double objectSize = longD;
-    double priorSegmentStrength = 1.0;
-    double contrastNoiseRatio = 0.003;
+    double priorSegmentStrength = 0.003;
+    double contrastNoiseRatio   = 0.8;
 
     double shortR = shortD / 2;
-    double longR = longD / 2;
+    double longR  = longD / 2;
 
     unsigned char foreground = 255;
     unsigned char background = 0;
@@ -148,86 +157,28 @@ int main( int argc, char *argv[] )
     InImageReader->SetFileName(argv[1]);
     InImageReader->Update();
 
-    InImageType::Pointer oimage = InImageReader->GetOutput();
+
     InImageType::Pointer image = InImageReader->GetOutput();
 
-    if (contrastNoiseRatio > 1.0)
-    {
+
+    if (contrastNoiseRatio > 1.0) {
         contrastNoiseRatio /= 100.0;
     }
 
-    if (priorSegmentStrength > 1.0)
-    {
+    if (priorSegmentStrength > 1.0) {
         priorSegmentStrength /= 100.0;
     }
 
     // set ROI
-    InImageType::IndexType index = image->GetLargestPossibleRegion().GetIndex();
-    InImageType::SizeType size = image->GetLargestPossibleRegion().GetSize();
-    InImageType::PointType origin  = image->GetOrigin();
+    InImageType::IndexType index     = image->GetLargestPossibleRegion().GetIndex();
+    InImageType::SizeType size       = image->GetLargestPossibleRegion().GetSize();
     InImageType::SpacingType spacing = image->GetSpacing();
     InImageType::SizeType roiSize;
+    InImageType::PointType center_phy;
 
-    roiSize[0] = static_cast<unsigned int>((longD + 20) / spacing[0]);
-    roiSize[1] = static_cast<unsigned int>((longD + 20) / spacing[1]);
-    roiSize[2] = static_cast<unsigned int>((longD + 20) / spacing[2]);
-
-    if(size[0] < roiSize[0] || size[1] < roiSize[1] || size[2] < roiSize[2])
-    {
-      typedef itk::ConstantPadImageFilter <InImageType, InImageType> ConstantPadImageFilterType;
-
-      cout << "Padding " << endl;
-      cout << "Input Image Spacing = " << spacing << endl;
-      cout << "Input Image Origin = " << origin << endl;
-      cout << "Input Image Size = " << size << endl<< endl << endl;
-
-      InImageType::PointType diff;
-      diff[0] = roiSize[0]-size[0];
-      diff[1] = roiSize[1]-size[1];
-      diff[2] = roiSize[2]-size[2];
-      diff[0] = diff[0]<0?0:diff[0];
-      diff[1] = diff[1]<0?0:diff[1];
-      diff[2] = diff[2]<0?0:diff[2];
-
-      InImageType::SizeType lowerExtendRegion;
-      lowerExtendRegion[0] = diff[0];
-      lowerExtendRegion[1] = diff[1];
-      lowerExtendRegion[2] = diff[2];
-
-      InImageType::SizeType upperExtendRegion;
-      upperExtendRegion[0] = diff[0];
-      upperExtendRegion[1] = diff[1];
-      upperExtendRegion[2] = diff[2];
-
-      cout << x << "," << y << "," << sliceNumber << endl;
-
-      x += diff[0];
-      y += diff[1];
-      sliceNumber += diff[2];
-
-      cout << x << "," << y << "," << sliceNumber << endl;
-
-      InImageType::PixelType constantPixel = 0;
-
-      ConstantPadImageFilterType::Pointer padFilter = ConstantPadImageFilterType::New();
-      padFilter->SetInput(image);
-      padFilter->SetPadLowerBound(lowerExtendRegion);
-      padFilter->SetPadUpperBound(upperExtendRegion);
-      padFilter->SetConstant(constantPixel);
-      padFilter->Update();
-
-      image = padFilter->GetOutput();
-      image->SetOrigin(origin-diff);
-    }
-
-    index = image->GetLargestPossibleRegion().GetIndex();
-    size = image->GetLargestPossibleRegion().GetSize();
-    origin  = image->GetOrigin();
-    spacing = image->GetSpacing();
-
-    cout << "Input Image Spacing = " << spacing << endl;
-    cout << "Input Image Origin = " << origin << endl;
-    cout << "Input Image Size = " << size << endl<< endl << endl;
+    roiSize[0] = static_cast<unsigned int>((longD + 10) / spacing[0]);
+    roiSize[1] = static_cast<unsigned int>((longD + 10) / spacing[1]);
+    roiSize[2] = static_cast<unsigned int>((longD + 10) / spacing[2]);
 
     OutImageType::IndexType roiStart;
     OutImageType::IndexType roiEnd;
@@ -243,18 +194,106 @@ int main( int argc, char *argv[] )
         center[2] = -sliceNumber;
 
     cout << center << endl;
+    image->TransformIndexToPhysicalPoint(center, center_phy);
+    cout << center_phy << endl;
 
-    roiStart[0] = center[0] - roiSize[0] / 2 + 1;
-    roiStart[1] = center[1] - roiSize[1] / 2 + 1;
-    roiStart[2] = center[2] - roiSize[2] / 2 + 1;
-    roiEnd[0] = roiStart[0] + roiSize[0];
-    roiEnd[1] = roiStart[1] + roiSize[1];
-    roiEnd[2] = roiStart[2] + roiSize[2];
+
+    roiStart[0] = center[0] - roiSize[0] / 2;
+    roiStart[1] = center[1] - roiSize[1] / 2;
+    roiStart[2] = center[2] - roiSize[2] / 2;
+    roiEnd[0]   = roiStart[0] + roiSize[0];
+    roiEnd[1]   = roiStart[1] + roiSize[1];
+    roiEnd[2]   = roiStart[2] + roiSize[2];
 
     cout << roiSize << endl;
     cout << roiStart << endl;
     cout << roiEnd << endl;
 
+
+    unsigned int ndims = image->GetImageDimension();
+
+    cout << " objectSize (radius) " << objectSize << endl;
+    OutImageType::PixelType radius = static_cast<OutImageType::PixelType>(objectSize);
+
+    /////////////////////////////////////////////////////////////////
+
+    InImageType::IndexType istart;
+    InImageType::SizeType isize;
+
+    for (unsigned n = 0; n < ndims; n++) {
+        roiStart[n] = roiStart[n] < 0 ? 0 : roiStart[n];
+        istart[n]   = roiStart[n];
+        isize[n]    = roiEnd[n] - roiStart[n];
+        isize[n]    = (static_cast<unsigned int>(isize[n] + istart[n]) <= size[n]) ?
+          isize[n] : (size[n] - istart[n] - 1);
+    }
+
+    cout << " roiStart " << roiStart << " roiEnd " << roiEnd << " " << endl;
+    cout << " istart " << istart << " isize " << isize << " " << endl;
+
+
+    InImageType::RegionType iRegion;
+    iRegion.SetIndex(istart);
+    iRegion.SetSize(isize);
+
+    RoiFilterType::Pointer fInput = RoiFilterType::New();
+    fInput->SetRegionOfInterest(iRegion);
+    fInput->SetInput(image);
+    fInput->Update();
+
+    InImageType::Pointer inImage = InImageType::New();
+    inImage = fInput->GetOutput();
+
+
+    {
+        InImageWriterType::Pointer writer = InImageWriterType::New();
+        writer->SetUseCompression(true);
+        writer->SetInput(inImage);
+        writer->SetFileName(string(argv[7]) + "in.nrrd");
+        writer->Update();
+    }
+
+
+    /////////////////////////////////////////////////////////////////
+
+    WeightImageType::SpacingType outSpacing = image->GetSpacing();
+    WeightImageType::Pointer inImageIso;
+    if (outSpacing[2] != outSpacing[0]) {
+		if(outSpacing[2] > outSpacing[0])
+			outSpacing[2] = outSpacing[0];
+		else {
+			outSpacing[0] = outSpacing[2];
+			outSpacing[1] = outSpacing[2];
+		}
+
+        cout << "Out spacing " << outSpacing << endl;
+
+        IsotropicResamplerType::Pointer isotropicResampler = IsotropicResamplerType::New();
+
+        isotropicResampler->SetInput(inImage);
+        isotropicResampler->SetOutputSpacing(outSpacing);
+        isotropicResampler->Update();
+
+        inImageIso = isotropicResampler->GetOutput();
+    } else {
+        typedef itk::CastImageFilter<InImageType, WeightImageType> CastImageFilterType;
+        CastImageFilterType::Pointer castImageFilter = CastImageFilterType::New();
+        castImageFilter->SetInput(inImage);
+        castImageFilter->Update();
+
+        inImageIso = castImageFilter->GetOutput();
+    }
+    iRegion = inImageIso->GetLargestPossibleRegion();
+
+
+    {
+        WeightImageWriterType::Pointer writer = WeightImageWriterType::New();
+
+        writer->SetUseCompression(true);
+        writer->SetInput(inImageIso);
+        writer->SetFileName(string(argv[7]) + "in-iso.nrrd");
+        writer->Update();
+    }
 
     // Definition of Morphological operation sturcture elements
     StructuringElementType::RadiusType elementRadius;
@@ -267,137 +306,78 @@ int main( int argc, char *argv[] )
     structuringElement1.SetRadius(1);
     structuringElement1.CreateStructuringElement();
 
-    elementRadius.Fill(static_cast<unsigned int>(round(3/spacing[0])));
-    elementRadius[2] = static_cast<unsigned int>(round(3/spacing[2]));
+    /*elementRadius.Fill(static_cast<unsigned int>(round(3 / outSpacing[0])));
 
     StructuringElementType structuringElement3;
     structuringElement3.SetRadius(elementRadius);
     structuringElement3.CreateStructuringElement();
 
-    elementRadius.Fill(static_cast<unsigned int>(round(5/spacing[0])));
-    elementRadius[2] = static_cast<unsigned int>(round(5/spacing[2]));
 
-    StructuringElementType structuringElement5;
-    structuringElement5.SetRadius(elementRadius);
-    structuringElement5.CreateStructuringElement();
+	elementRadius.Fill(static_cast<unsigned int>(round(5 / outSpacing[0])));
 
-    elementRadius.Fill(static_cast<unsigned int>(round(10/spacing[0])));
-    elementRadius[2] = static_cast<unsigned int>(round(10/spacing[2]));
+	StructuringElementType structuringElement5;
+	structuringElement5.SetRadius(elementRadius);
+	structuringElement5.CreateStructuringElement();*/
+
+    elementRadius.Fill(static_cast<unsigned int>(round(10 / outSpacing[0])));
 
     StructuringElementType structuringElement10;
     structuringElement10.SetRadius(elementRadius);
     structuringElement10.CreateStructuringElement();
 
+    elementRadius.Fill(static_cast<unsigned int>(round(15 / outSpacing[0])));
 
-    unsigned int ndims = image->GetImageDimension();
+    StructuringElementType structuringElement15;
+    structuringElement15.SetRadius(elementRadius);
+    structuringElement15.CreateStructuringElement();
 
-    cout << " objectSize (radius) " << objectSize << endl;
-    OutImageType::PixelType radius = static_cast< OutImageType::PixelType> (objectSize);
-
-    /////////////////////////////////////////////////////////////////
-
-    InImageType::IndexType istart;
-    InImageType::SizeType isize;
-
-    OutImageType::IndexType ostart;
-    OutImageType::SizeType osize;
-
-    WeightImageType::IndexType wstart;
-    WeightImageType::SizeType wsize;
 
     OutImageType::IndexType roiCenter;
-
-    for (unsigned n = 0; n < ndims; n++)
-    {
-        istart[n] = roiStart[n] + origin[n];
-        isize[n] = roiEnd[n] - roiStart[n];
-
-        ostart[n] = istart[n];
-        osize[n] = isize[n];
-
-        roiCenter[n] = static_cast<OutputPixelType>(round(isize[n] / 2));
-
-        wstart[n] = istart[n];
-        wsize[n] = isize[n];
+    inImageIso->TransformPhysicalPointToIndex(center_phy, roiCenter);
+    for (unsigned n = 0; n < ndims; n++) {
+        roiStart[n] = iRegion.GetIndex(n);
+        roiEnd[n]   = roiStart[n] + iRegion.GetSize(n) - 1;
     }
 
     cout << " roiStart " << roiStart << " roiEnd " << roiEnd << " " << endl;
-    cout << " istart " << istart << " isize " << isize << " " << endl;
     cout << " roiCenter " << roiCenter << endl;
 
 
-
-    InImageType::RegionType iRegion;
-    iRegion.SetSize( isize );
-    iRegion.SetIndex( istart );
-
-    InImageType::RegionType oRegion;
-    oRegion.SetSize( osize );
-    oRegion.SetIndex( ostart );
-
-    InImageType::RegionType wRegion;
-    wRegion.SetSize( wsize );
-    wRegion.SetIndex( wstart );
-
-
-    RoiFilterType::Pointer fInput = RoiFilterType::New();
-    //cout << image ;
-    //cout << iRegion;
-    fInput->SetRegionOfInterest( iRegion );
-    fInput->SetInput( image );
-    fInput->Update();
-
-
-    InImageType::Pointer inImage = InImageType::New();
-    inImage = fInput->GetOutput();
-    origin[0] = istart[0];
-    origin[1] = istart[1];
-    origin[2] = istart[2];
-    inImage->SetOrigin(origin);
-
-    //cout << inImage ;
-
-    OutImageType::Pointer labImage = OutImageType::New();
+    OutImageType::Pointer labImage   = OutImageType::New();
     WeightImageType::Pointer wtImage = WeightImageType::New();
 
-    labImage->CopyInformation(inImage);
-    labImage->SetBufferedRegion( inImage->GetBufferedRegion() );
+    labImage->CopyInformation(inImageIso);
+    labImage->SetBufferedRegion(inImageIso->GetBufferedRegion());
     labImage->Allocate();
-    labImage->FillBuffer( 0 );
+    labImage->FillBuffer(0);
 
-    wtImage->CopyInformation(inImage);
-    wtImage->SetBufferedRegion( inImage->GetBufferedRegion() );
+    wtImage->CopyInformation(inImageIso);
+    wtImage->SetBufferedRegion(inImageIso->GetBufferedRegion());
     wtImage->Allocate();
-    wtImage->FillBuffer( 0 );
+    wtImage->FillBuffer(0);
 
-    /////////////////////////////////////////////////////////////////
 
-    DiffusionFilterType::Pointer diffusionFilter = DiffusionFilterType::New();
+	DiffusionFilterType::Pointer diffusionFilter = DiffusionFilterType::New();
+	// Diffusion filter parameters
+	diffusionFilter->SetInput(inImageIso);
+	diffusionFilter->SetNumberOfIterations(5);
+	diffusionFilter->SetTimeStep(outSpacing[0] / 16);
+	diffusionFilter->SetConductanceParameter(2);
+	diffusionFilter->UseImageSpacingOn();
+	diffusionFilter->Update();
 
-    // Diffusion filter parameters
-    diffusionFilter->SetInput(inImage);
+    {
+		WeightImageWriterType::Pointer writer = WeightImageWriterType::New();
+		writer->SetUseCompression(true);
+		writer->SetInput(diffusionFilter->GetOutput());
+		writer->SetFileName(string(argv[7]) + "filt.nrrd");
+		writer->Update();
+    }
+	inImageIso = diffusionFilter->GetOutput();
 
-    diffusionFilter->SetNumberOfIterations( 5 );
-    diffusionFilter->SetTimeStep( (spacing[0] < spacing[2]) ? (spacing[0] / 16) : (spacing[2] / 16));
-    diffusionFilter->SetConductanceParameter( 2 );
-    diffusionFilter->UseImageSpacingOn();
-    diffusionFilter->Update();
 
-    // {
-    //     InImageWriterType::Pointer writer = InImageWriterType::New();
-    //     writer->SetUseCompression(true);
-    //     writer->SetInput(inImage);
-    //     writer->SetFileName(string(argv[7]) + "in.nrrd");
-    //     writer->Update();
-    // }
-    //
-    // {
-    //     WeightImageWriterType::Pointer writer = WeightImageWriterType::New();
-    //     writer->SetUseCompression(true);
-    //     writer->SetInput(diffusionFilter->GetOutput());
-    //     writer->SetFileName(string(argv[7]) + "filt.nrrd");
-    //     writer->Update();
-    // }
+    DilateFilterType::Pointer dilateFilter10 = DilateFilterType::New();
+    DilateFilterType::Pointer dilateFilter15 = DilateFilterType::New();
 
     /////////////////////////////////////////////////////////////////
     {
@@ -405,65 +385,74 @@ int main( int argc, char *argv[] )
         InImageType::SizeType size;
         InImageType::RegionType centerRegion;
 
-        size.Fill(4);
-        start[0] = roiCenter[0] - 1;
-        start[1] = roiCenter[1] - 1;
-        start[2] = roiCenter[2] - 1;
+        size.Fill(round(max(shortD/ outSpacing[0], 5.0)));
+        start[0] = roiCenter[0] - round(max(shortD / 2 / outSpacing[0],2.0));
+        start[1] = roiCenter[1] - round(max(shortD / 2 / outSpacing[1],2.0));
+        start[2] = roiCenter[2] - round(max(shortD / 2 / outSpacing[2],2.0));
         centerRegion.SetSize(size);
         centerRegion.SetIndex(start);
 
         cout << centerRegion << endl;
 
-        //itk::ImageRegionIterator< InImageType > centerPixels(image, centerRegion);
-        //itk::ImageRegionIterator< InImageType > centerPixels(inImage, centerRegion);
-        itk::ImageRegionIterator< WeightImageType > centerPixels(diffusionFilter->GetOutput(), centerRegion);
-        double Tc = 0.5;
-        double pTc = 0;
-        double varTc = 0;
-        double stdTc = 0.4;
-        double numPixels = 4 * 4 * 4;
-        int iter = 0;
+        // itk::ImageRegionIterator< InImageType > centerPixels(image, centerRegion);
+        // itk::ImageRegionIterator< InImageType > centerPixels(inImage, centerRegion);
+        // itk::ImageRegionIterator< WeightImageType > centerPixels(diffusionFilter->GetOutput(), centerRegion);
+        itk::ImageRegionIterator<WeightImageType> centerPixels(inImageIso, centerRegion);
+		const double th_low = -800;
+		const double th_high = 200;
+        double Tc        = -300;
+        double stdTc     = 250;
+		double pTc = 0;
+		double pStdTc = 0;
+		double varTc = 0;
+        double numPixels = 125;
+        int iter         = 0;
+		int numMaxPix = 0;
 
-        while(numPixels > 4 && iter++ < 50 && stdTc > 0.01)
-        {
-            double maxPix = 0;
-            double sumPix = 0;
+        while (	numPixels > 30 &&
+				numMaxPix < 100 &&
+				iter++ < 20 && 
+				stdTc > 200 && 
+				(pTc != Tc || pStdTc != stdTc)) {
+            double sumPix  = 0;
             double sumPix2 = 0;
-            double Tc2 = 0;
+            double Tc2     = 0;
 
-            numPixels = 4 * 4 * 4;
+            numPixels = 0;
+			numMaxPix = 0;
 
             centerPixels.GoToBegin();
-            while (!centerPixels.IsAtEnd())
-            {
+            while (!centerPixels.IsAtEnd()) {
                 double pixel = centerPixels.Get();
-                if(pixel > maxPix)
-                    maxPix = pixel;
-                if (pixel > Tc-2*stdTc && pixel < Tc+2*stdTc)
-                {
-                    sumPix = sumPix + pixel;
-                    sumPix2 = sumPix2 + pixel*pixel;
-                    cout << pixel << " ";
-                }
-                else
-                {
-                    numPixels--;
-                    cout << "(" << pixel << ") ";
+                if (pixel > th_high){
+					numMaxPix++;
+				}
+                if ((pixel > th_low  && pixel < th_high) && (pixel > Tc - 1 * stdTc && pixel < Tc + 2 * stdTc)) {
+                    sumPix  = sumPix + pixel;
+                    sumPix2 = sumPix2 + pixel * pixel;
+					numPixels++;
+                    //cout << pixel << " ";
+                } else {
+                    //cout << "(" << pixel << ") ";
                 }
 
                 ++centerPixels;
             }
-            pTc = Tc;
-            Tc = sumPix / numPixels;
-            Tc2 = sumPix2 / numPixels;
-            varTc = Tc2 - Tc*Tc;
-            stdTc = sqrt(varTc);
+            pTc    = Tc;
+            pStdTc = stdTc;
+            if(numPixels>10){
+              Tc     = sumPix / numPixels;
+              Tc2    = sumPix2 / numPixels;
+              varTc  = Tc2 - Tc * Tc;
+              stdTc  = sqrt(varTc);
+            }
+            if(stdTc == 0) stdTc = 50;
 
-            if(stdTc > 0.2 || (pTc == Tc && stdTc > 0.1))
-            {
-                Tc = maxPix;
-                stdTc = stdTc/2;
-                cout << endl << "Reset initial: Tc="<< Tc <<" stdTc=" << stdTc << endl;
+            if (Tc < th_low || Tc > th_high || stdTc > 400  || stdTc < 50) {
+                if (Tc > th_high) Tc = th_high-250;
+				if (Tc < th_low) Tc = th_low+250;
+                stdTc = 100;
+                cout << endl << "Reset initial: Tc=" << Tc << " stdTc=" << stdTc << endl;
                 continue;
             }
 
@@ -471,25 +460,23 @@ int main( int argc, char *argv[] )
             cout << "--------" << endl;
             cout << numPixels << "     => " << Tc << "+-" << stdTc << endl;
         }
+        cout << "Threshold: " << Tc - 2 * stdTc << endl;
 
-        if(stdTc > 0.2) stdTc = 0.2;
-        cout << "Threshold: " << Tc - 3*stdTc << endl;
-
-        ThresholdFilterType::Pointer thresholdFilter = ThresholdFilterType::New();
+        ThresholdFilterType::Pointer thresholdFilter    = ThresholdFilterType::New();
         ThresholdFilterType::Pointer thresholdFilter_bg = ThresholdFilterType::New();
-        //thresholdFilter->SetInput(inImage);
-        //thresholdFilter_bg->SetInput(inImage);
-        thresholdFilter->SetInput(diffusionFilter->GetOutput());
-        thresholdFilter_bg->SetInput(diffusionFilter->GetOutput());
+        // thresholdFilter->SetInput(inImage);
+        // thresholdFilter_bg->SetInput(inImage);
+        thresholdFilter->SetInput(inImageIso);
+        thresholdFilter_bg->SetInput(inImageIso);
 
-        thresholdFilter->SetLowerThreshold(Tc-3*stdTc);
-        thresholdFilter->SetUpperThreshold(Tc+3*stdTc);
+        thresholdFilter->SetLowerThreshold(Tc - 2 * stdTc);
+        thresholdFilter->SetUpperThreshold(5000);
 
-        //thresholdFilter_bg->SetLowerThreshold(Tc-stdTc*2);
-        //thresholdFilter_bg->SetUpperThreshold(Tc+200);
+        thresholdFilter_bg->SetLowerThreshold(th_low);
+        thresholdFilter_bg->SetUpperThreshold(5000);
 
-        thresholdFilter_bg->SetLowerThreshold(Tc-3*stdTc);
-        thresholdFilter_bg->SetUpperThreshold(Tc+3*stdTc);
+        // thresholdFilter_bg->SetLowerThreshold(Tc - 200);
+        // thresholdFilter_bg->SetUpperThreshold(Tc + 400);
 
         thresholdFilter->SetInsideValue(1);
         thresholdFilter->SetOutsideValue(0);
@@ -500,7 +487,7 @@ int main( int argc, char *argv[] )
         thresholdFilter_bg->Update();
 
         OutImageType::Pointer thresholdImage = thresholdFilter->GetOutput();
-        {
+		{
             SliceBySliceFilterType::Pointer sliceBySliceFilter = SliceBySliceFilterType::New();
 
             FillholeFilter2DType::Pointer fillholeFilter2D = FillholeFilter2DType::New();
@@ -515,7 +502,7 @@ int main( int argc, char *argv[] )
             thresholdImage = sliceBySliceFilter->GetOutput();
         }
 
-        {
+        /*{
             SliceBySliceFilterType::Pointer sliceBySliceFilter = SliceBySliceFilterType::New();
 
             OpeningFilter2DType::Pointer openingFilter2D = OpeningFilter2DType::New();
@@ -532,66 +519,112 @@ int main( int argc, char *argv[] )
 
 
         {
-    		AreaOpeningImageFilterType::Pointer openingFilter = AreaOpeningImageFilterType::New();
-	    	openingFilter->SetInput(thresholdImage);
-		    openingFilter->SetLambda(3);
-            //openingFilter->FullyConnectedOn();
-    		openingFilter->Update();
-            cout <<  "Opening" << endl;
+            AreaOpeningImageFilterType::Pointer openingFilter = AreaOpeningImageFilterType::New();
+            openingFilter->SetInput(thresholdImage);
+            openingFilter->SetLambda(3);
+            // openingFilter->FullyConnectedOn();
+            openingFilter->Update();
+            cout << "Opening" << endl;
             thresholdImage = openingFilter->GetOutput();
-	    	//thresholdImage->SetPixel(roiCenter,1);
-        }
+        }*/
+        cout << "Thresholding" << endl;
 
-        cout <<  "Thresholding" << endl;
+        // Fixed seed
+		{
+        	InImageType::IndexType start;
+	        InImageType::SizeType size;
+	        InImageType::RegionType centerRegion;
 
-
-        /////////////////////////////////////////////////////////////////
-
-		ConnectedComponentImageFilterType::Pointer connected = ConnectedComponentImageFilterType::New();
-		connected->SetInput(thresholdImage);
-		connected->Update();
-
-
-        /////////////////////////////////////////////////////////////////
-        double target = 0;
-        {
-            itk::ImageRegionIterator< OutImageType > centerPixels(connected->GetOutput(), centerRegion);
+        	size.Fill(3);
+	        start[0] = roiCenter[0] - 1;
+	        start[1] = roiCenter[1] - 1;
+	        start[2] = roiCenter[2] - 1;
+	        centerRegion.SetSize(size);
+	        centerRegion.SetIndex(start);
+	        
+            itk::ImageRegionIterator<OutImageType> centerPixels(thresholdImage, centerRegion);
+			
             centerPixels.GoToBegin();
-            while (!centerPixels.IsAtEnd())
-            {
-                double label = centerPixels.Get();
-                if(label > 0)
-                {
-                    target = label;
-                }
+            while (!centerPixels.IsAtEnd()) {
+				centerPixels.Set(1);
 
                 ++centerPixels;
             }
         }
-        cout << target << endl;
+
+		/////////////////////////////////////////////////////////////////
+		cout << "Connected Component" << endl;
+		double target = 0;
+		ConnectedComponentImageFilterType::Pointer connected = ConnectedComponentImageFilterType::New();
+		try
+		{
+			AreaOpeningImageFilterType::Pointer openingFilter = AreaOpeningImageFilterType::New(); // delete small particles
+			openingFilter->SetInput(thresholdImage);
+			openingFilter->SetLambda(3);
+			openingFilter->FullyConnectedOn();
+			openingFilter->Update();
+			cout << "Opening" << endl;
+			
+			connected->SetInput(openingFilter->GetOutput());
+			connected->Update();
 
 
+			/////////////////////////////////////////////////////////////////
+			cout << "Select Center Component" << endl;
+			unsigned int count[255] = { 0, };
+			{
+				itk::ImageRegionIterator<OutImageType> centerPixels(connected->GetOutput(), centerRegion);
+				itk::ImageRegionIterator<OutImageType> centerPixels1(thresholdFilter_bg->GetOutput(), centerRegion);
+
+				centerPixels.GoToBegin();
+				centerPixels1.GoToBegin();
+				while (!centerPixels.IsAtEnd()) {
+					unsigned char label = centerPixels.Get();
+					if (label > 0) {
+						++count[label];
+						centerPixels1.Set(0);
+					}
+
+					++centerPixels;
+					++centerPixels1;
+				}
+			}
+			unsigned int max_count = 0;
+			for (unsigned c = 1; c < 255; c++) {
+				if (count[c] > max_count) {
+					max_count = count[c];
+					target = c;
+					cout << c << ", " << max_count << endl;
+				}
+			}
+			cout << target << endl;
+
+		}
+		catch (itk::ExceptionObject &excp)
+		{
+			cerr << "Exception thrown while writing the series " << endl;
+			cerr << excp << endl;
+		}
 
         OutImageType::Pointer targetImage = OutImageType::New();
         int numSeeds = 0;
 
-        targetImage->CopyInformation(inImage);
-        targetImage->SetBufferedRegion( inImage->GetBufferedRegion() );
+        targetImage->CopyInformation(inImageIso);
+        targetImage->SetBufferedRegion(inImageIso->GetBufferedRegion());
         targetImage->Allocate();
-        targetImage->FillBuffer( 0 );
+        targetImage->FillBuffer(0);
         {
-            itk::ImageRegionIterator< OutImageType > label(connected->GetOutput(), connected->GetOutput()->GetBufferedRegion());
-            itk::ImageRegionIterator< OutImageType > targetLabel(targetImage, targetImage->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> label(connected->GetOutput(), centerRegion);
+            itk::ImageRegionIterator<OutImageType> targetLabel(targetImage, centerRegion);
             label.GoToBegin();
             targetLabel.GoToBegin();
-            while (!label.IsAtEnd())
-            {
-                if(label.Get() == target)
-                {
+            while (!label.IsAtEnd()) {
+                if (label.Get() == target) {
                     targetLabel.Set(1);
                     ++numSeeds;
-                }
-                else targetLabel.Set(0);
+                } else {
+					targetLabel.Set(0); 
+				}
                 ++label;
                 ++targetLabel;
             }
@@ -599,7 +632,9 @@ int main( int argc, char *argv[] )
 
         cout << numSeeds << endl;
 
-        {
+
+
+        /*{
             SubFilterType::Pointer subFilter = SubFilterType::New();
             subFilter->SetInput1(targetImage);
             subFilter->SetInput2(thresholdFilter_bg->GetOutput());
@@ -607,48 +642,45 @@ int main( int argc, char *argv[] )
 
             targetImage = subFilter->GetOutput();
 
-            itk::ImageRegionIterator< OutImageType > targetLabel(targetImage, targetImage->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> targetLabel(targetImage, targetImage->GetBufferedRegion());
             targetLabel.GoToBegin();
-            while (!targetLabel.IsAtEnd())
-            {
-                if(targetLabel.Get() != 1) targetLabel.Set(0);
+            while (!targetLabel.IsAtEnd()) {
+                if (targetLabel.Get() != 1) targetLabel.Set(0);
                 ++targetLabel;
             }
 
-     		AreaOpeningImageFilterType::Pointer openingFilter = AreaOpeningImageFilterType::New();
-	    	openingFilter->SetInput(targetImage);
-		    openingFilter->SetLambda(5);
-    		openingFilter->Update();
+            AreaOpeningImageFilterType::Pointer openingFilter = AreaOpeningImageFilterType::New();
+            openingFilter->SetInput(targetImage);
+            openingFilter->SetLambda(5);
+            openingFilter->Update();
             targetImage = openingFilter->GetOutput();
-        }
+        }*/
 
 
         ErodeFilterType::Pointer erodeFilterB = ErodeFilterType::New();
-		erodeFilterB->SetInput(thresholdFilter_bg->GetOutput());
-		erodeFilterB->SetKernel(structuringElement1);
+        erodeFilterB->SetInput(thresholdFilter_bg->GetOutput());
+        erodeFilterB->SetKernel(structuringElement1);
         erodeFilterB->SetErodeValue(1);
-		erodeFilterB->Update();
+        erodeFilterB->Update();
 
 
-		DilateFilterType::Pointer dilateFilter5 = DilateFilterType::New();
-		dilateFilter5->SetInput(targetImage);
-		dilateFilter5->SetKernel(structuringElement5);
-        dilateFilter5->SetDilateValue(1);
-		dilateFilter5->Update();
-
-		DilateFilterType::Pointer dilateFilter10 = DilateFilterType::New();
-		dilateFilter10->SetInput(targetImage);
-		dilateFilter10->SetKernel(structuringElement10);
+        dilateFilter10->SetInput(targetImage);
+        dilateFilter10->SetKernel(structuringElement10);
         dilateFilter10->SetDilateValue(1);
-		dilateFilter10->Update();
+        dilateFilter10->Update();
+
+        dilateFilter15->SetInput(targetImage);
+        dilateFilter15->SetKernel(structuringElement15);
+        dilateFilter15->SetDilateValue(1);
+        dilateFilter15->Update();
         {
             ConnectedComponentImageFilterType::Pointer connected = ConnectedComponentImageFilterType::New();
-    		connected->SetInput(dilateFilter10->GetOutput());
-	    	connected->Update();
+            connected->SetInput(dilateFilter15->GetOutput());
+            connected->Update();
 
             OutImageType::Pointer image = connected->GetOutput();
 
-            itk::ImageRegionIterator< OutImageType > centerLabels(image, centerRegion);
+            itk::ImageRegionIterator<OutImageType> centerLabels(image, centerRegion);
 
             DuplicatorType::Pointer duplicator = DuplicatorType::New();
             duplicator->SetInputImage(image);
@@ -659,9 +691,9 @@ int main( int argc, char *argv[] )
             double target = connected->GetOutput()->GetPixel(roiCenter);
 
             OutImageType::SizeType roiSize;
-            roiSize[0] = static_cast<unsigned int>((longD + 6) / spacing[0]);
-            roiSize[1] = static_cast<unsigned int>((longD + 6) / spacing[1]);
-            roiSize[2] = static_cast<unsigned int>((longD + 6) / spacing[2]);
+            roiSize[0] = static_cast<unsigned int>(longD / outSpacing[0]);
+            roiSize[1] = static_cast<unsigned int>(longD / outSpacing[1]);
+            roiSize[2] = static_cast<unsigned int>(longD / outSpacing[2]);
 
             OutImageType::IndexType roiStart;
             OutImageType::IndexType roiEnd;
@@ -669,29 +701,30 @@ int main( int argc, char *argv[] )
             roiStart[0] = roiCenter[0] - roiSize[0] / 2;
             roiStart[1] = roiCenter[1] - roiSize[1] / 2;
             roiStart[2] = roiCenter[2] - roiSize[2] / 2;
-            roiEnd[0] = roiStart[0] + roiSize[0];
-            roiEnd[1] = roiStart[1] + roiSize[1];
-            roiEnd[2] = roiStart[2] + roiSize[2];
+            roiEnd[0]   = roiStart[0] + roiSize[0];
+            roiEnd[1]   = roiStart[1] + roiSize[1];
+            roiEnd[2]   = roiStart[2] + roiSize[2];
 
             cout << roiSize << endl;
             cout << roiStart << endl;
             cout << roiEnd << endl;
 
 
-            itk::ImageRegionIterator< OutImageType > tempLabel(tempImage, tempImage->GetBufferedRegion());
-            itk::ImageRegionIteratorWithIndex< OutImageType > label(dilateFilter10->GetOutput(), image->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> tempLabel(tempImage, tempImage->GetBufferedRegion());
+            itk::ImageRegionIteratorWithIndex<OutImageType> label(dilateFilter15->GetOutput(),
+              image->GetBufferedRegion());
             label.GoToBegin();
             tempLabel.GoToBegin();
-            while (!label.IsAtEnd())
-            {
+            while (!label.IsAtEnd()) {
                 OutImageType::IndexType idx = label.GetIndex();
 
                 if (idx[0] >= roiStart[0] && idx[1] >= roiStart[1] && idx[2] >= roiStart[2] &&
-                    idx[0] < roiEnd[0] && idx[1] < roiEnd[1] && idx[2] < roiEnd[2])
+                  idx[0] < roiEnd[0] && idx[1] < roiEnd[1] && idx[2] < roiEnd[2])
                 {
-                    if(tempLabel.Get() == target) label.Set(1);
-                }
-                else label.Set(0);
+                    if (tempLabel.Get() == target) label.Set(1);
+                } else { 
+					label.Set(0); 
+				}
                 ++label;
                 ++tempLabel;
             }
@@ -700,14 +733,17 @@ int main( int argc, char *argv[] )
 
         // generate seed areas
         {
-            //itk::ImageRegionIterator< OutImageType > bg(erodeFilterB->GetOutput(), erodeFilterB->GetOutput()->GetBufferedRegion());
-            itk::ImageRegionIterator< OutImageType > bg(thresholdFilter_bg->GetOutput(), erodeFilterB->GetOutput()->GetBufferedRegion());
-            itk::ImageRegionIterator< OutImageType > gray(dilateFilter5->GetOutput(), dilateFilter5->GetOutput()->GetBufferedRegion());
-            itk::ImageRegionIterator< OutImageType > truebg(dilateFilter10->GetOutput(), dilateFilter10->GetOutput()->GetBufferedRegion());
+            // itk::ImageRegionIterator< OutImageType > bg(erodeFilterB->GetOutput(), erodeFilterB->GetOutput()->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> bg(thresholdFilter_bg->GetOutput(),
+              thresholdFilter_bg->GetOutput()->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> gray(dilateFilter10->GetOutput(),
+              dilateFilter10->GetOutput()->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> truebg(dilateFilter15->GetOutput(),
+              dilateFilter15->GetOutput()->GetBufferedRegion());
 
-            itk::ImageRegionIterator< OutImageType > targetLabel(targetImage, targetImage->GetBufferedRegion());
-            itk::ImageRegionIterator< OutImageType > newLabel(labImage, labImage->GetBufferedRegion());
-            itk::ImageRegionIterator< WeightImageType > weight(wtImage, wtImage->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> targetLabel(targetImage, targetImage->GetBufferedRegion());
+            itk::ImageRegionIterator<OutImageType> newLabel(labImage, labImage->GetBufferedRegion());
+            itk::ImageRegionIterator<WeightImageType> weight(wtImage, wtImage->GetBufferedRegion());
 
             targetLabel.GoToBegin();
             newLabel.GoToBegin();
@@ -716,33 +752,27 @@ int main( int argc, char *argv[] )
             bg.GoToBegin();
             gray.GoToBegin();
             truebg.GoToBegin();
-            while (!targetLabel.IsAtEnd())
-            {
-                weight.Set(0);
-                if(gray.Get() == 0)
-                {
-                    weight.Set(contrastNoiseRatio);
-                    newLabel.Set(2);
-                }
+            while (!targetLabel.IsAtEnd()) {
+                weight.Set(0.0);
 
-                if(targetLabel.Get() == 1) // taget
-                {
-                    weight.Set(priorSegmentStrength);
+                if (targetLabel.Get() == 1) { // taget
+                    weight.Set(contrastNoiseRatio);
                     newLabel.Set(1);
                 }
 
-
-                if(bg.Get() == 1) // background
-                {
+				if (bg.Get() == 1) { // background
                     weight.Set(contrastNoiseRatio);
-                    //weight.Set(priorSegmentStrength/2);
                     newLabel.Set(2);
                 }
+				else if (gray.Get() == 0) {
+					weight.Set(contrastNoiseRatio);
+					newLabel.Set(3);
+				}
 
-                if(truebg.Get() == 0) // definetely background, opposite value (0 is bg)
-                {
+                if (truebg.Get() == 0) { // definetely background, opposite value (0 is bg)
+                    //weight.Set(contrastNoiseRatio);
                     weight.Set(priorSegmentStrength);
-                    newLabel.Set(2);
+                    newLabel.Set(4);
                 }
 
                 ++targetLabel;
@@ -754,17 +784,17 @@ int main( int argc, char *argv[] )
             }
         }
 
-        // {
-        //     OutImageWriterType::Pointer writer = OutImageWriterType::New();
-        //     writer->SetUseCompression(true);
-        //     writer->SetInput(labImage);
-        //     writer->SetFileName(string(argv[7]) + "Tc-label.nrrd");
-        //     writer->Update();
-        // }
-
+        {
+            OutImageWriterType::Pointer writer = OutImageWriterType::New();
+            writer->SetUseCompression(true);
+            writer->SetInput(labImage);
+            writer->SetFileName(string(argv[7]) + "Tc-label.nrrd");
+            writer->Update();
+        }
     }
 
     cout << "label image generation completed" << endl;
+
 
     /////////////////////////////////////////////////////////////////
 
@@ -772,20 +802,20 @@ int main( int argc, char *argv[] )
     GrowCutFilterType::Pointer filter = GrowCutFilterType::New();
 
     // Segmentation filter parameters
-    filter->SetInput( diffusionFilter->GetOutput() );
-    filter->SetLabelImage( labImage );
+    filter->SetInput(inImageIso);
+    filter->SetLabelImage(labImage);
 
-    filter->SetStrengthImage( wtImage );
+    filter->SetStrengthImage(wtImage);
 
-    filter->SetSeedStrength( contrastNoiseRatio );
-    filter->SetObjectRadius((unsigned int)objectSize);
+    filter->SetSeedStrength(contrastNoiseRatio);
+    filter->SetObjectRadius((unsigned int) objectSize);
 
     //
     ShowProgressObject progressWatch(filter);
     itk::SimpleMemberCommand<ShowProgressObject>::Pointer command;
     command = itk::SimpleMemberCommand<ShowProgressObject>::New();
     command->SetCallbackFunction(&progressWatch,
-                                 &ShowProgressObject::ShowProgress);
+      &ShowProgressObject::ShowProgress);
     filter->AddObserver(itk::ProgressEvent(), command);
 
     filter->Update();
@@ -801,12 +831,16 @@ int main( int argc, char *argv[] )
 
     // Post processing
     {
-        itk::ImageRegionIterator< OutImageType > label(outputImageROI, outputImageROI->GetBufferedRegion());
+        itk::ImageRegionIterator<OutImageType> label(outputImageROI, outputImageROI->GetBufferedRegion());
+        itk::ImageRegionIterator<OutImageType> truebg(dilateFilter15->GetOutput(), dilateFilter15->GetOutput()->GetBufferedRegion());
+
         label.GoToBegin();
-        while (!label.IsAtEnd())
-        {
-            if(label.Get() != 1) label.Set(0);
+        truebg.GoToBegin();
+        while (!label.IsAtEnd()) {
+            if (label.Get() != 1) label.Set(0);
+            if (truebg.Get() == 0) label.Set(0);
             ++label;
+            ++truebg;
         }
 
         SliceBySliceFilterType::Pointer sliceBySliceFilter = SliceBySliceFilterType::New();
@@ -827,54 +861,49 @@ int main( int argc, char *argv[] )
         openingFilter->SetLambda(3);
         openingFilter->FullyConnectedOn();
         openingFilter->Update();
-        cout <<  "Opening" << endl;
+        cout << "Opening" << endl;
         outputImageROI = openingFilter->GetOutput();
     }
 
-    // {
-    //     OutImageWriterType::Pointer writer = OutImageWriterType::New();
-    //     writer->SetUseCompression(true);
-    //     writer->SetInput(outputImageROI);
-    //     writer->SetFileName(string(argv[7]) + "mask-label.nrrd");
-    //     writer->Update();
-    // }
+    /*{
+     *  OutImageWriterType::Pointer writer = OutImageWriterType::New();
+     *  writer->SetUseCompression(true);
+     *  writer->SetInput(outputImageROI);
+     *  writer->SetFileName(string(argv[7]) + "mask-label.nrrd");
+     *  writer->Update();
+     * }*/
 
 
     /////////////////////////////////////////////////////////////////
-    OutImageType::Pointer outputImage = OutImageType::New();
-    // allocate outputImage first
-    outputImage->CopyInformation( oimage );
-    outputImage->SetSpacing(spacing);
-    outputImage->SetBufferedRegion( oimage->GetBufferedRegion() );
-    outputImage->Allocate();
-    outputImage->FillBuffer(0);
 
-    //cout << outputImageROI;
-    oRegion = outputImage->GetLargestPossibleRegion();
-    oRegion.SetIndex(0, oRegion.GetIndex(0) - origin[0]);
-    oRegion.SetIndex(1, oRegion.GetIndex(1) - origin[1]);
-    oRegion.SetIndex(2, oRegion.GetIndex(2) - origin[2]);
-
-    itk::ImageRegionIterator< OutImageType > filterOut(outputImageROI, oRegion);
-    itk::ImageRegionIterator< OutImageType > out(outputImage, outputImage->GetLargestPossibleRegion());
-
-    for (filterOut.GoToBegin(), out.GoToBegin(); !filterOut.IsAtEnd(); ++filterOut, ++out)
-    {
-        if (filterOut.Get() == 1)
-            out.Set(1);
-        //out.Set(filterOut.Get());
-    }
-
-    cout << "writeImage_spacing = " << outputImage->GetSpacing() << endl ;
-    cout << "writeImage_origin  = "  << outputImage->GetOrigin() << endl ;
-    cout << "writeImage_LargestPossibleRegion = " << outputImage->GetLargestPossibleRegion() << endl ;
+    /*OutImageType::Pointer outputImage = OutImageType::New();
+     * // allocate outputImage first
+     * outputImage->CopyInformation(image);
+     * outputImage->SetSpacing(spacing);
+     * outputImage->SetBufferedRegion(image->GetBufferedRegion());
+     * outputImage->Allocate();
+     * outputImage->FillBuffer(0);
+     *
+     * itk::ImageRegionIterator< OutImageType > filterOut(outputImageROI, outputImageROI->GetBufferedRegion());
+     * itk::ImageRegionIterator< OutImageType > out(outputImage, oRegion);
+     *
+     * for (filterOut.GoToBegin(), out.GoToBegin(); !filterOut.IsAtEnd(); ++filterOut, ++out)
+     * {
+     *  if (filterOut.Get() == 1)
+     *      out.Set(1);
+     *  //out.Set(filterOut.Get());
+     * }
+     *
+     * cout << "writeImage_spacing = " << outputImage->GetSpacing() << endl;
+     * cout << "writeImage_origin  = " << outputImage->GetOrigin() << endl;
+     * cout << "writeImage_LargestPossibleRegion = " << outputImage->GetLargestPossibleRegion() << endl;*/
 
 
     ////////To write Output images /////////////////////
     OutImageWriterType::Pointer OutImageWriter = OutImageWriterType::New();
     OutImageWriter->SetUseCompression(true);
-    OutImageWriter->SetInput(outputImage);
-    OutImageWriter->SetFileName( argv[7] );
+    OutImageWriter->SetInput(outputImageROI);
+    OutImageWriter->SetFileName(argv[7]);
 
     try
     {
@@ -890,6 +919,53 @@ int main( int argc, char *argv[] )
 
     cout << "Saved the tumor mask image" << endl;
 
+    // Vesselness feature generate
+    {
+        VesselnessGeneratorType::Pointer vesselnessFeatureGenerator = VesselnessGeneratorType::New();
+        InputImageSpatialObjectType::Pointer inputSpatialObject     = InputImageSpatialObjectType::New();
+
+        typedef itk::CastImageFilter<WeightImageType, InImageType> CastImageFilterType;
+        CastImageFilterType::Pointer castImageFilter = CastImageFilterType::New();
+        castImageFilter->SetInput(inImageIso);
+
+        inputSpatialObject->SetImage(castImageFilter->GetOutput());
+
+        vesselnessFeatureGenerator->SetInput(inputSpatialObject);
+        vesselnessFeatureGenerator->SetSigma(1.0);
+        vesselnessFeatureGenerator->SetAlpha1(0.1);
+        vesselnessFeatureGenerator->SetAlpha2(2.0);
+        vesselnessFeatureGenerator->SetSigmoidAlpha(-10.0);
+        vesselnessFeatureGenerator->SetSigmoidBeta(40.0);
+        vesselnessFeatureGenerator->SetUseVesselEnhancingDiffusion(true);
+
+        vesselnessFeatureGenerator->Update();
+
+        cout << "vesselness feature generation completed" << endl;
+
+        typename SpatialObjectType::Pointer vesselness =
+          const_cast<SpatialObjectType *>(vesselnessFeatureGenerator->GetFeature());
+        typename OutputImageSpatialObjectType::Pointer outputObject =
+          dynamic_cast<OutputImageSpatialObjectType *>( vesselness.GetPointer() );
+        typename WeightImageType::Pointer vesselImage =
+          const_cast<WeightImageType *>(outputObject->GetImage());
+        vesselImage->DisconnectPipeline();
+
+    itk::ImageRegionIterator<WeightImageType> vesselnessit(vesselImage, vesselImage->GetBufferedRegion());
+    vesselnessit.GoToBegin();
+    while (!vesselnessit.IsAtEnd()) {
+      vesselnessit.Set(1 - vesselnessit.Get());
+
+      ++vesselnessit;
+    }
+
+        {
+            WeightImageWriterType::Pointer writer = WeightImageWriterType::New();
+            writer->SetUseCompression(true);
+            writer->SetInput(vesselImage);
+            writer->SetFileName(string(argv[7]) + "-vessel.nrrd");
+            writer->Update();
+        }
+    }
 
     return EXIT_SUCCESS;
-}
+} // main
