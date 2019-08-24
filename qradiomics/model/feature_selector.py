@@ -45,18 +45,18 @@ class greedyFeatureSelection(object):
                     scores.append((score, feature))
 
                     if self._verbose:
-                        print "Current AUC : ", np.mean(score)
+                        print("Current AUC : ", np.mean(score))
 
             good_features.add(sorted(scores)[-1][1])
             score_history.append(sorted(scores)[-1])
             if self._verbose:
-                print "Current Features : ", sorted(list(good_features))
+                print("Current Features : ", sorted(list(good_features)))
 
         # Remove last added feature
         good_features.remove(score_history[-1][1])
         good_features = sorted(list(good_features))
         if self._verbose:
-            print "Selected Features : ", good_features
+            print("Selected Features : ", good_features)
 
         return good_features
 
@@ -64,7 +64,7 @@ class greedyFeatureSelection(object):
         X = self._data
         y = self._labels
         good_features = self.selectionLoop(X, y)
-        return X[:, good_features
+        return X[:, good_features]
 
 
 # from sklearn.pipeline import FeatureUnion
@@ -73,5 +73,6 @@ class greedyFeatureSelection(object):
 #
 # pca = PCA(n_components=10)
 # skb = SelectKBest(k=1)
-# combined_feature = FeatureUnion)([("pca", pca),("skb", skb)])
+# combined_feature = FeatureUnion([("pca", pca),("skb", skb)])
 #
+
