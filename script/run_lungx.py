@@ -8,6 +8,9 @@ import multiprocessing
 from multiprocessing import freeze_support
 from ruffus import *
 
+sys.path.append(".")
+sys.path.append("..")
+
 from qradiomics import *
 from qradiomics.io import *
 from qradiomics.util import organize_features as organize_features
@@ -106,15 +109,15 @@ def task_nodule_segmentation(input_file, output_files, pid, output_prefix):
 
         output_file = output_prefix + str(idx) + "-label.nrrd"
         open(output_file, "w")
-        #p = subprocess.Popen([nodule_segmentation, input_file, str(x), str(y), str(slice_number), str(large_diameter),
-        #                      str(short_diameter), str(output_file)])
-        #p.wait()
+        p = subprocess.Popen([nodule_segmentation, input_file, str(x), str(y), str(slice_number), str(large_diameter),
+                              str(short_diameter), str(output_file)])
+        p.wait()
 
 
 def task_feature_extraction(input_file, output_file, mask_file):
     open(output_file, "w")
-    #p = subprocess.Popen([feature_extraction, input_file, mask_file, output_file])
-    #p.wait()
+    p = subprocess.Popen([feature_extraction, input_file, mask_file, output_file])
+    p.wait()
 
 
 def task_feature_organization(input_files, output_file):
