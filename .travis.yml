@@ -22,6 +22,9 @@ matrix:
     env: ITK_VERSION=v4.13.0 TRAVIS_PYTHON_VERSION=3.6
 cache:
 - directories:
+  - $HOME/miniconda
+  - $HOME/itk-${ITK_VERSION}
+  - $HOME/itk-${ITK_VERSION}-build
 before_install:
 - if test $TRAVIS_OS_NAME == osx ; then brew update && brew install vtk python3 lcov || brew upgrade libpng; fi
 before_script:
