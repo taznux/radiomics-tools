@@ -58,10 +58,10 @@ script:
 - if ! test -d build; then mkdir build; fi
 - cd build
 - cmake .. -DENABLE_COVERAGE=On && make && make test && cd - && coverage run script/run_lungx.py && cd build
-- python3 setup.py install
 - make gcov
 - make lcov
 - cd -
+- python3 setup.py install
 after_success:
 - codecov
 
