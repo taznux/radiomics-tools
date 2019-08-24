@@ -8,6 +8,9 @@ import multiprocessing
 from multiprocessing import freeze_support
 from ruffus import *
 
+sys.path.append(".")
+sys.path.append("..")
+
 from qradiomics import *
 from qradiomics.io import *
 from qradiomics.util import organize_features as organize_features

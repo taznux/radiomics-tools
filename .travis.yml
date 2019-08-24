@@ -1,6 +1,5 @@
 language: cpp
 sudo: required
-dist: trusty
 addons:
   apt:
     packages:
@@ -10,49 +9,33 @@ addons:
     - python3-pip
     - python3-yaml
     - lcov
+    - libvtk7-dev
 matrix:
   include:
   - os: osx
+    osx_image: xcode11
     compiler: clang
-    env: ITK_VERSION=v4.13.0 VTK_VERSION=v8.2.0 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.0 TRAVIS_PYTHON_VERSION=3.6
   - os: linux
+    dist: bionic
     compiler: gcc
-    env: ITK_VERSION=v4.13.0 VTK_VERSION=v8.2.0 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.0 TRAVIS_PYTHON_VERSION=3.6
 cache:
 - directories:
-  - $HOME/itk-${ITK_VERSION}
-  - $HOME/itk-${ITK_VERSION}-build
-  - $HOME/vtk-${VTK_VERSION}
-  - $HOME/vtk-${VTK_VERSION}-build
 before_install:
-- if test $TRAVIS_OS_NAME == osx ; then brew update && brew install python3 lcov || brew upgrade libpng; fi
+- if test $TRAVIS_OS_NAME == osx ; then brew update && brew install vtk python3 lcov || brew upgrade libpng; fi
 before_script:
 - export NUM_THREADS=4
-- export VTK_SOURCE_DIR=$HOME/vtk-${VTK_VERSION}
-- export VTK_BUILD_DIR=${VTK_SOURCE_DIR}-build
-- if ! test -e ${VTK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $VTK_SOURCE_DIR; fi
-- if ! test -d ${VTK_SOURCE_DIR}; then git clone --branch ${VTK_VERSION} git://vtk.org/VTK.git ${VTK_SOURCE_DIR}; fi
-- if ! test -d ${VTK_BUILD_DIR}; then mkdir ${VTK_BUILD_DIR}; fi
-- cd ${VTK_BUILD_DIR}
-- cmake ${VTK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF 
-- make --jobs=${NUM_THREADS} --keep-going
-- cd -
 - export ITK_SOURCE_DIR=$HOME/itk-${ITK_VERSION}
 - export ITK_BUILD_DIR=${ITK_SOURCE_DIR}-build
 - if ! test -e ${ITK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $ITK_SOURCE_DIR; fi
-- if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} git://itk.org/ITK.git
-  ${ITK_SOURCE_DIR}; fi
+- if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} git://itk.org/ITK.git ${ITK_SOURCE_DIR}; fi
 - if ! test -d ${ITK_BUILD_DIR}; then mkdir ${ITK_BUILD_DIR}; fi
 - cd ${ITK_BUILD_DIR}
-- cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF
-  -DModule_ITKReview=ON -DModule_LesionSizingToolkit=ON
+- cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DModule_ITKReview=ON -DModule_LesionSizingToolkit=ON
 - make --jobs=$NUM_THREADS --keep-going
 - cd -
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
-    curl "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -o miniconda_install.sh;
-  elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-    curl "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o miniconda_Install.sh;
-  fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -o miniconda_install.sh; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o miniconda_Install.sh; fi
 - bash miniconda_install.sh -b -f -p "$HOME/miniconda/"
 - export PATH="$HOME/miniconda/bin:$PATH"
 - hash -r
@@ -67,13 +50,12 @@ before_script:
 - cd externals/TCIAExplorer
 - python3 setup.py install
 - cd -
-- python3 setup.py install
 - python3 script/download_lungx_tcia.py
 script:
 - if ! test -d build; then mkdir build; fi
 - cd build
-#- cmake .. -DENABLE_COVERAGE=On -DITK_DIR=${ITK_BUILD_DIR} && make && make test && cd - && cd build
-- cmake .. -DENABLE_COVERAGE=On -DITK_DIR=${ITK_BUILD_DIR} && make && make test && cd - && coverage run script/run_lungx.py && cd build
+- cmake .. -DENABLE_COVERAGE=On && make && make test && cd - && coverage run script/run_lungx.py && cd build
+- python3 setup.py install
 - make gcov
 - make lcov
 - cd -

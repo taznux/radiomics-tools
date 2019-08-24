@@ -64,7 +64,7 @@ class greedyFeatureSelection(object):
         X = self._data
         y = self._labels
         good_features = self.selectionLoop(X, y)
-        return X[:, good_features
+        return X[:, good_features]
 
 
 # from sklearn.pipeline import FeatureUnion
@@ -73,6 +73,6 @@ class greedyFeatureSelection(object):
 #
 # pca = PCA(n_components=10)
 # skb = SelectKBest(k=1)
-# combined_feature = FeatureUnion)([("pca", pca),("skb", skb)])
+# combined_feature = FeatureUnion([("pca", pca),("skb", skb)])
 #
 
