@@ -15,16 +15,16 @@ endif ()
 find_package(ITK)
 if(ITK_FOUND)
   include(${ITK_USE_FILE})
-else(ITK_FOUND)
+else()
   message(FATAL_ERROR
     "Cannot build Application without ITK. Please set ITK_DIR.")
-endif(ITK_FOUND)
+endif()
 
 # choose new behaviour for CMP0042
 # see http://www.cmake.org/cmake/help/v3.0/policy/CMP0042.html for more details
 if (POLICY CMP0042)
 	cmake_policy(SET CMP0042 NEW)
-endif (POLICY CMP0042)
+endif ()
 
 
 #
