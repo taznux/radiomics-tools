@@ -1,46 +1,46 @@
-PROJECT (ContourTools)
+project (ContourTools)
 
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
-SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+set (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
-INCLUDE_DIRECTORIES(../ITKUtils)
+include_directories(../ITKUtils)
 
-ADD_EXECUTABLE(ROIGenerator
+add_executable(ROIGenerator
     ROIGenerator.cxx
 )
-ADD_EXECUTABLE(ROI2BinImage
+add_executable(ROI2BinImage
     ROI2BinImage.cxx
 )
-ADD_EXECUTABLE(ROICropImage
+add_executable(ROICropImage
     ROICropImage.cxx
 )
-ADD_EXECUTABLE(ExtractBoundary
+add_executable(ExtractBoundary
     ExtractBoundary.cxx
 )
-ADD_EXECUTABLE(GTVs2ITV
+add_executable(GTVs2ITV
     GTVs2ITV.cxx
 )
-ADD_EXECUTABLE(HoleGenerator
+add_executable(HoleGenerator
     HoleGenerator.cxx
 )
-ADD_EXECUTABLE(STAPLEComparison
+add_executable(STAPLEComparison
     STAPLEComparison.cxx
 )
 
 
-SET (BUILD_SHARED_LIBS OFF)
-SET (CMAKE_VERBOSE_MAKEFILE OFF)
+set (BUILD_SHARED_LIBS OFF)
+set (CMAKE_VERBOSE_MAKEFILE OFF)
 
-TARGET_LINK_LIBRARIES(ROIGenerator ${ITK_LIBRARIES} ITKUtils)
-TARGET_LINK_LIBRARIES(ROICropImage ${ITK_LIBRARIES} ITKUtils)
-TARGET_LINK_LIBRARIES(ROI2BinImage ${ITK_LIBRARIES} ITKUtils)
-TARGET_LINK_LIBRARIES(ExtractBoundary ${ITK_LIBRARIES} ITKUtils)
-TARGET_LINK_LIBRARIES(GTVs2ITV ${ITK_LIBRARIES} ITKUtils)
-TARGET_LINK_LIBRARIES(HoleGenerator ${ITK_LIBRARIES} ITKUtils)
-TARGET_LINK_LIBRARIES(STAPLEComparison ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(ROIGenerator ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(ROICropImage ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(ROI2BinImage ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(ExtractBoundary ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(GTVs2ITV ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(HoleGenerator ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(STAPLEComparison ${ITK_LIBRARIES} ITKUtils)
 
 
 if(codecov_FOUND)

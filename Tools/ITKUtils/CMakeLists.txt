@@ -1,8 +1,8 @@
-PROJECT (ITKUtils)
+project (ITKUtils)
 
-SET (LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
+set (LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
-ADD_LIBRARY(ITKUtils
+add_library(ITKUtils
   ITKUtils.cxx
   itkMaskedSTAPLEImageFilter.hxx
   itkMaskedSpatialObjectToImageFilter.hxx
@@ -11,8 +11,8 @@ ADD_LIBRARY(ITKUtils
   fibheap.cpp
 )
 
-SET (BUILD_SHARED_LIBS OFF)
-SET (CMAKE_VERBOSE_MAKEFILE OFF)
+set (BUILD_SHARED_LIBS OFF)
+set (CMAKE_VERBOSE_MAKEFILE OFF)
 
 
 if(codecov_FOUND)
