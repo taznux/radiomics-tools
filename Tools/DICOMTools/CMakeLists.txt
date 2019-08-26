@@ -1,46 +1,46 @@
-PROJECT (DICOMTools)
+project (DICOMTools)
 
-SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+set (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
 endif(COMMAND cmake_policy)
 
-FIND_PACKAGE(Boost)
-IF(Boost_FOUND)
-  INCLUDE_DIRECTORIES( ${Boost_INCLUDE_DIR} )
-ELSE(Boost_FOUND)
-  MESSAGE(FATAL_ERROR
+find_package(Boost)
+if(Boost_FOUND)
+  include_directories( ${Boost_INCLUDE_DIR} )
+else(Boost_FOUND)
+  message(FATAL_ERROR
     "Cannot build Application without Boost. Please set Boost_DIR.")
-ENDIF(Boost_FOUND)
+endif(Boost_FOUND)
 
-INCLUDE_DIRECTORIES(../ITKUtils)
+include_directories(../ITKUtils)
 
-ADD_EXECUTABLE(DICOM2NRRDConverter
+add_executable(DICOM2NRRDConverter
     DICOM2NRRDConverter.cxx
 )
-ADD_EXECUTABLE(DICOM2NRRDConverterHCC
+add_executable(DICOM2NRRDConverterHCC
     DICOM2NRRDConverterHCC.cxx
 )
-ADD_EXECUTABLE(DICOM2NRRDConverterNLST
+add_executable(DICOM2NRRDConverterNLST
     DICOM2NRRDConverterNLST.cxx
 )
-ADD_EXECUTABLE("DICOM-RT2NRRDConverter"
+add_executable("DICOM-RT2NRRDConverter"
     DICOM-RT2NRRDConverter.cxx
 )
-ADD_EXECUTABLE("DICOMTagReader"
+add_executable("DICOMTagReader"
     DICOMTagReader.cxx
 )
 
 
-SET (BUILD_SHARED_LIBS OFF)
-SET (CMAKE_VERBOSE_MAKEFILE OFF)
+set (BUILD_SHARED_LIBS OFF)
+set (CMAKE_VERBOSE_MAKEFILE OFF)
 
-TARGET_LINK_LIBRARIES(DICOM2NRRDConverter ${ITK_LIBRARIES} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(DICOM2NRRDConverterHCC ${ITK_LIBRARIES} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(DICOM2NRRDConverterNLST ${ITK_LIBRARIES} ${Boost_LIBRARIES})
-TARGET_LINK_LIBRARIES(DICOM-RT2NRRDConverter ${ITK_LIBRARIES})
-TARGET_LINK_LIBRARIES(DICOMTagReader ${ITK_LIBRARIES})
+target_link_libraries(DICOM2NRRDConverter ${ITK_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(DICOM2NRRDConverterHCC ${ITK_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(DICOM2NRRDConverterNLST ${ITK_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(DICOM-RT2NRRDConverter ${ITK_LIBRARIES})
+target_link_libraries(DICOMTagReader ${ITK_LIBRARIES})
 
 
 
