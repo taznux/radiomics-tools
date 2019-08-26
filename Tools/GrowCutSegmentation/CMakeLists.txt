@@ -1,17 +1,17 @@
 project(GrowCutSegmentation)
 
-SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
+set (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
-INCLUDE_DIRECTORIES(../ITKUtils)
+include_directories(../ITKUtils)
 
-ADD_EXECUTABLE(NoduleSegmentation
+add_executable(NoduleSegmentation
     NoduleSegmentation.cxx
 )
 
-SET (BUILD_SHARED_LIBS OFF)
-SET (CMAKE_VERBOSE_MAKEFILE OFF)
+set (BUILD_SHARED_LIBS OFF)
+set (CMAKE_VERBOSE_MAKEFILE OFF)
 
-TARGET_LINK_LIBRARIES(NoduleSegmentation ${ITK_LIBRARIES} ITKUtils)
+target_link_libraries(NoduleSegmentation ${ITK_LIBRARIES} ITKUtils)
 
 
 if(codecov_FOUND)
