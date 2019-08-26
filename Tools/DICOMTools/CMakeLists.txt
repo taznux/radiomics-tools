@@ -4,15 +4,15 @@ set (EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
 if(COMMAND cmake_policy)
   cmake_policy(SET CMP0003 NEW)
-endif(COMMAND cmake_policy)
+endif()
 
 find_package(Boost)
 if(Boost_FOUND)
   include_directories( ${Boost_INCLUDE_DIR} )
-else(Boost_FOUND)
+else()
   message(FATAL_ERROR
     "Cannot build Application without Boost. Please set Boost_DIR.")
-endif(Boost_FOUND)
+endif()
 
 include_directories(../ITKUtils)
 
