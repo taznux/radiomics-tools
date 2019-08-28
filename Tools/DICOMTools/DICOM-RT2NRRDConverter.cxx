@@ -45,7 +45,7 @@
 #include "itkMaskedSpatialObjectToImageFilter.h"
 
 
-const unsigned int Dimension = 3;
+constexpr unsigned int Dimension = 3;
 typedef unsigned char PixelType;
 typedef short CTPixelType;
 typedef itk::Point< double, Dimension > PointType;

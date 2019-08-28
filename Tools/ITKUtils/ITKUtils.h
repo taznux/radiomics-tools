@@ -36,9 +36,9 @@ typedef float OutputPixelType;
 typedef short LabelPixelType;
 typedef short MaskPixelType;
 
-const unsigned int Dimension = 3;
-const unsigned int OutputDimension = 2;
-const MaskPixelType maskValue = 1;
+constexpr unsigned int Dimension = 3;
+constexpr unsigned int OutputDimension = 2;
+MaskPixelType maskValue = 1;
 
 typedef itk::Image < InputPixelType, Dimension >  InputImageType;
 typedef itk::Image < InternalPixelType, Dimension > InternalImageType;
