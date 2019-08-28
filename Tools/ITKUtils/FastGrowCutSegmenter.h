@@ -1,11 +1,11 @@
 #ifndef FAST_MARCHING_H
 #define FAST_MARCHING_H
 
-#include <math.h>
+#include <cmath>
 #include <queue>
 #include <set>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
 #include <fstream>
 #include <iterator>
 
