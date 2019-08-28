@@ -227,8 +227,7 @@ int main(int argc, char *argv[])
     //unionMaskImage = ApplyRoi<MaskImageType>(unionMaskImage, roiRegion);
 
     InternalImageType::Pointer outputImage;
-    typedef itk::STAPLEImageFilter<MaskImageType, InternalImageType>
-        StapleFilterType;
+    using StapleFilterType = itk::STAPLEImageFilter<MaskImageType, InternalImageType>;
 
     StapleFilterType::Pointer sFilter = StapleFilterType::New();
     for (int i = 0; i < inputMaskImages.size(); i++)
@@ -307,11 +306,11 @@ int main(int argc, char *argv[])
     cout << "U1 Volume is " << volumeU1 << endl;
 #endif // if 0
 #if 0
-    typedef itk::Image<MaskPixelType, Dimension - 1> MaskImage2DType;
-    typedef itk::FlatStructuringElement<Dimension - 1> StructuringElement2DType;
-    typedef itk::BinaryDilateImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType> DilateFilter2DType;
-    typedef itk::BinaryErodeImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType> ErodeFilter2DType;
-    typedef itk::SliceBySliceImageFilter<MaskImageType, MaskImageType> SliceBySliceFilterType;
+    using MaskImage2DType = itk::Image<MaskPixelType, Dimension - 1>;
+    using StructuringElement2DType = itk::FlatStructuringElement<Dimension - 1>;
+    using DilateFilter2DType = itk::BinaryDilateImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType>;
+    using ErodeFilter2DType = itk::BinaryErodeImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType>;
+    using SliceBySliceFilterType = itk::SliceBySliceImageFilter<MaskImageType, MaskImageType>;
 
     StructuringElement2DType::RadiusType elementRadius2D;
     elementRadius2D.Fill(1);

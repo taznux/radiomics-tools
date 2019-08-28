@@ -144,7 +144,7 @@ void
 CalcIntensityFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, InputPixelType &inputMin,
   InputPixelType &inputMax, ostream &outfile)
 {
-    typedef itk::LabelStatisticsImageFilter<InputImageType, MaskImageType> LabelStatisticsFilterType;
+    using LabelStatisticsFilterType = itk::LabelStatisticsImageFilter<InputImageType, MaskImageType>;
 
     LabelStatisticsFilterType::Pointer LabelStatisticsfilter = LabelStatisticsFilterType::New();
     LabelStatisticsfilter->UseHistogramsOn();
@@ -189,16 +189,16 @@ CalcGeometryFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer 
 {
     SpacingType spacing = inputImage->GetSpacing();
 
-    typedef itk::LabelGeometryImageFilter<MaskImageType, InputImageType> LabelGeometryType;
+    using LabelGeometryType = itk::LabelGeometryImageFilter<MaskImageType, InputImageType>;
     LabelGeometryType::Pointer labelGeometryFilter = LabelGeometryType::New();
 
     // Set up a connected components filter to label the binary objects.
-    typedef itk::ConnectedComponentImageFilter<MaskImageType, MaskImageType> ConnectedComponentType;
+    using ConnectedComponentType = itk::ConnectedComponentImageFilter<MaskImageType, MaskImageType>;
     ConnectedComponentType::Pointer connectedComponentFilter = ConnectedComponentType::New();
     connectedComponentFilter->SetInput(maskImage);
 
     // Relabel the components in order of size.
-    typedef itk::RelabelComponentImageFilter<MaskImageType, MaskImageType> RelabelType;
+    using RelabelType = itk::RelabelComponentImageFilter<MaskImageType, MaskImageType>;
     RelabelType::Pointer relabeler = RelabelType::New();
     relabeler->SetInput(connectedComponentFilter->GetOutput());
     labelGeometryFilter->SetInput(relabeler->GetOutput());
@@ -251,11 +251,11 @@ CalcGeometryFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer 
 void
 CalcShapeAndIntensityFeatures(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImage, ostream &outfile)
 {
-    typedef itk::StatisticsLabelObject<LabelPixelType, Dimension> LabelObjectTypeS;
-    typedef itk::LabelMap<LabelObjectTypeS>            LabelMapTypeS;
+    using LabelObjectTypeS = itk::StatisticsLabelObject<LabelPixelType, Dimension>;
+    using LabelMapTypeS = itk::LabelMap<LabelObjectTypeS>;
 
     // converting binary image to Statistics label map
-    typedef itk::BinaryImageToStatisticsLabelMapFilter<MaskImageType, InputImageType, LabelMapTypeS> I2LSType;
+    using I2LSType = itk::BinaryImageToStatisticsLabelMapFilter<MaskImageType, InputImageType, LabelMapTypeS>;
     I2LSType::Pointer i2ls = I2LSType::New();
     // itk::SimpleFilterWatcher watcher1( i2ls );
 
@@ -385,11 +385,11 @@ void
 CalcShapeAndIntensityFeatures(InputImage2DType::Pointer inputImage, MaskImage2DType::Pointer maskImage,
   ostream &outfile)
 {
-    typedef itk::StatisticsLabelObject<LabelPixelType, Dimension - 1> LabelObject2DTypeS;
-    typedef itk::LabelMap<LabelObject2DTypeS>            LabelMap2DTypeS;
+    using LabelObject2DTypeS = itk::StatisticsLabelObject<LabelPixelType, Dimension - 1>;
+    using LabelMap2DTypeS = itk::LabelMap<LabelObject2DTypeS>;
 
     // converting binary image to Statistics label map
-    typedef itk::BinaryImageToStatisticsLabelMapFilter<MaskImage2DType, InputImage2DType, LabelMap2DTypeS> I2LS2DType;
+    using I2LS2DType = itk::BinaryImageToStatisticsLabelMapFilter<MaskImage2DType, InputImage2DType, LabelMap2DTypeS>;
     I2LS2DType::Pointer i2ls = I2LS2DType::New();
     // itk::SimpleFilterWatcher watcher1( i2ls );
 
@@ -519,10 +519,10 @@ void
 CalcGlcmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer maskImage, InputPixelType inputMin,
   InputPixelType inputMax, ostream &outfile)
 {
-    typedef itk::Statistics::ScalarImageToTextureFeaturesFilter<InputImageType> TextureFilterType;
+    using TextureFilterType = itk::Statistics::ScalarImageToTextureFeaturesFilter<InputImageType>;
     TextureFilterType::Pointer glcm = TextureFilterType::New();
 
-    typedef TextureFilterType::TextureFeaturesFilterType TextureFeaturesFilterType;
+    using TextureFeaturesFilterType = TextureFilterType::TextureFeaturesFilterType;
 
     TextureFilterType::FeatureNameVectorPointer requestedFeatures =
       TextureFilterType::FeatureNameVector::New();
@@ -555,9 +555,9 @@ CalcGlcmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer mas
     // outfile<< endl<< endl << "The inputImage features from the ScalarImageToTextureFeaturesFilter:" << endl;
 
 
-    typedef itk::Statistics::ScalarImageToCooccurrenceMatrixFilter<InputImageType> GLCMFilterType;
-    typedef GLCMFilterType::HistogramType HistogramType;
-    typedef itk::Statistics::HistogramToTextureFeaturesFilter<HistogramType> Hist2FeaturesType;
+    using GLCMFilterType = itk::Statistics::ScalarImageToCooccurrenceMatrixFilter<InputImageType>;
+    using HistogramType = GLCMFilterType::HistogramType;
+    using Hist2FeaturesType = itk::Statistics::HistogramToTextureFeaturesFilter<HistogramType>;
 
     TextureFilterType::OffsetVector::ConstPointer offsets = glcm->GetOffsets();
     for (TextureFilterType::OffsetVector::ConstIterator offset = offsets->Begin(); offset != offsets->End(); offset++) {
@@ -602,10 +602,10 @@ void
 CalcGlrmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer maskImage, InputPixelType inputMin,
   InputPixelType inputMax, double distMax, ostream &outfile)
 {
-    typedef itk::Statistics::ScalarImageToRunLengthFeaturesFilter<InputImageType> RunLengthFilterType;
+    using RunLengthFilterType = itk::Statistics::ScalarImageToRunLengthFeaturesFilter<InputImageType>;
     RunLengthFilterType::Pointer glrm = RunLengthFilterType::New();
 
-    typedef RunLengthFilterType::RunLengthFeaturesFilterType RunLengthFeaturesFilterType;
+    using RunLengthFeaturesFilterType = RunLengthFilterType::RunLengthFeaturesFilterType;
 
     RunLengthFilterType::FeatureNameVectorPointer requestedFeatures =
       RunLengthFilterType::FeatureNameVector::New();
@@ -691,7 +691,7 @@ StentRemoval(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImag
     #endif
 
 
-    typedef itk::BinaryThresholdImageFilter<InputImageType, MaskImageType> BinaryThresholdfilterType;
+    using BinaryThresholdfilterType = itk::BinaryThresholdImageFilter<InputImageType, MaskImageType>;
 
     BinaryThresholdfilterType::Pointer binaryThresholdfilter = BinaryThresholdfilterType::New();
 
@@ -701,7 +701,7 @@ StentRemoval(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImag
     binaryThresholdfilter->SetLowerThreshold(500); // <- Main paraneter
 
     #if 0
-    typedef itk::BinaryShapeKeepNObjectsImageFilter<MaskImageType> LabelOpeningType;
+    using LabelOpeningType = itk::BinaryShapeKeepNObjectsImageFilter<MaskImageType>;
 
     LabelOpeningType::Pointer opening = LabelOpeningType::New();
     opening->SetInput(binaryThresholdfilter->GetOutput());
@@ -719,12 +719,12 @@ StentRemoval(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImag
     dilateFilter->SetDilateValue(maskValue);
     dilateFilter->Update();
 
-    typedef itk::Image<MaskPixelType, Dimension - 1> MaskImage2DType;
+    using MaskImage2DType = itk::Image<MaskPixelType, Dimension - 1>;
 
-    typedef itk::SliceBySliceImageFilter<MaskImageType, MaskImageType> SliceBySliceFilterType;
+    using SliceBySliceFilterType = itk::SliceBySliceImageFilter<MaskImageType, MaskImageType>;
     SliceBySliceFilterType::Pointer sliceBySliceFilter = SliceBySliceFilterType::New();
 
-    typedef itk::BinaryFillholeImageFilter<MaskImage2DType> I2LType;
+    using I2LType = itk::BinaryFillholeImageFilter<MaskImage2DType>;
     I2LType::Pointer reconstruction = I2LType::New();
     reconstruction->SetFullyConnected(true);
     reconstruction->SetForegroundValue(maskValue);
@@ -736,12 +736,12 @@ StentRemoval(InputImageType::Pointer inputImage, MaskImageType::Pointer maskImag
 
 
     // remove stent area
-    typedef itk::SubtractImageFilter<MaskImageType, MaskImageType> SubtractImageFilterType;
+    using SubtractImageFilterType = itk::SubtractImageFilter<MaskImageType, MaskImageType>;
     SubtractImageFilterType::Pointer subtractFilter = SubtractImageFilterType::New();
     subtractFilter->SetInput1(maskImage);
     subtractFilter->SetInput2(sliceBySliceFilter->GetOutput());
 
-    typedef itk::AndImageFilter<MaskImageType> AndImageFilterType;
+    using AndImageFilterType = itk::AndImageFilter<MaskImageType>;
     AndImageFilterType::Pointer andFilter = AndImageFilterType::New();
     andFilter->SetInput1(maskImage);
     andFilter->SetInput2(subtractFilter->GetOutput());
@@ -763,7 +763,7 @@ ExtractLargestAreaSlice(InputImageType::Pointer inputImage, MaskImageType::Point
     size[2] = 0;
 
 
-    typedef itk::ExtractImageFilter<MaskImageType, MaskImage2DType> FilterType;
+    using FilterType = itk::ExtractImageFilter<MaskImageType, MaskImage2DType>;
     FilterType::Pointer filter = FilterType::New();
     filter->SetDirectionCollapseToSubmatrix();
 
@@ -780,7 +780,7 @@ ExtractLargestAreaSlice(InputImageType::Pointer inputImage, MaskImageType::Point
         filter->SetInput(maskImage);
         filter->Update();
 
-        typedef itk::ImageRegionConstIterator<MaskImage2DType> maskImage2DIteratorType;
+        using maskImage2DIteratorType = itk::ImageRegionConstIterator<MaskImage2DType>;
         maskImage2DIteratorType maskImage2Dit(filter->GetOutput(), filter->GetOutput()->GetRequestedRegion());
 
         float curArea = 0;
@@ -819,7 +819,7 @@ ExtractLargestAreaSlice(InputImageType::Pointer inputImage, MaskImageType::Point
         // size[2] = 0;
         // start[2] = maxSlice;
 
-        typedef itk::ExtractImageFilter<InputImageType, InputImage2DType> FilterType;
+        using FilterType = itk::ExtractImageFilter<InputImageType, InputImage2DType>;
         FilterType::Pointer filter = FilterType::New();
         // filter->InPlaceOn();
         filter->SetDirectionCollapseToSubmatrix();
@@ -941,10 +941,10 @@ main(int argc, char * argv[])
     cout << "Label Image RegionSize = " << labelImageRegionSize << endl;
     cout << "Label Image Direction = " << labelImageDirection << endl << endl << endl;
 
-    // typedef itk::IdentityTransform<double, Dimension> TransformType;
+    // using TransformType = itk::IdentityTransform<double, Dimension>;
 
     /*
-     * typedef itk::ResampleImageFilter<InputImageType, InputImageType> ResampleImageFilterType;
+     * using ResampleImageFilterType = itk::ResampleImageFilter<InputImageType, InputImageType>;
      * ResampleImageFilterType::Pointer resampler = ResampleImageFilterType::New();
      * resampler->SetInput(inputImage);
      * resampler->SetSize(labelImageRegionSize);
@@ -981,8 +981,8 @@ main(int argc, char * argv[])
     // For Island Removing
     MaskImageType::Pointer maskImageIslandRemoved;
     {
-        // typedef itk::LabelShapeKeepNObjectsImageFilter< MaskImageType > LabelOpeningType;
-        typedef itk::BinaryShapeKeepNObjectsImageFilter<MaskImageType> LabelOpeningType;
+        // using LabelOpeningType = itk::LabelShapeKeepNObjectsImageFilter< MaskImageType >;
+        using LabelOpeningType = itk::BinaryShapeKeepNObjectsImageFilter<MaskImageType>;
 
         LabelOpeningType::Pointer opening = LabelOpeningType::New();
         opening->SetInput(maskImage);
@@ -1027,7 +1027,7 @@ main(int argc, char * argv[])
     inputImage->SetDirection(maskImage->GetDirection());
 
     InternalImageType::Pointer maskImageFloat;
-    typedef itk::CastImageFilter<MaskImageType, InputImageType> CastToInputFilterType;
+    using CastToInputFilterType = itk::CastImageFilter<MaskImageType, InputImageType>;
     CastToInputFilterType::Pointer toInputFilter = CastToInputFilterType::New();
     toInputFilter->SetInput(maskImage);
     toInputFilter->Update();
@@ -1042,10 +1042,10 @@ main(int argc, char * argv[])
     //    {
     //        // Changing the data type of Input Image (unsigned int)  to float
 
-    //        typedef itk::ImageRegionIterator< InternalImageType>       inputImageIteratorFloatType;
+    //        using inputImageIteratorFloatType = itk::ImageRegionIterator< InternalImageType>;
     //        inputImageIteratorFloatType inputImageFloatIt( inputImageFloat, inputImageFloat->GetRequestedRegion() );
 
-    //        typedef itk::ImageRegionConstIterator< InputImageType>       inputImageIteratorType;
+    //        using inputImageIteratorType = itk::ImageRegionConstIterator< InputImageType>;
     //        inputImageIteratorType inputImageit( inputImage, inputImage->GetRequestedRegion() );
 
     //        inputImageit.GoToBegin();
@@ -1068,7 +1068,7 @@ main(int argc, char * argv[])
     }
 
     #if 0
-    typedef itk::CastImageFilter<InputImageType, LabelImageType> SUVCastFilterType;
+    using SUVCastFilterType = itk::CastImageFilter<InputImageType, LabelImageType>;
     SUVCastFilterType::Pointer SUVCaster = SUVCastFilterType::New();
 
     SUVCaster->SetInput(inputImage);

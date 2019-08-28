@@ -237,8 +237,7 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   //NOTE: We set the InsideValue and Outside values to max() and zero, and
   //      tell the filter to not use the object value to ensure that
   //      grey-scale SpatialObjects are converted to a binary mask.
-  typedef itk::SpatialObjectToImageFilter<TInputSpatialObject, MaskImageType>
-  SpatialObjectToImageFilterType;
+  using SpatialObjectToImageFilterType = itk::SpatialObjectToImageFilter<TInputSpatialObject, MaskImageType>;
   typename SpatialObjectToImageFilterType::Pointer filterConvertMask =
     SpatialObjectToImageFilterType::New();
   filterConvertMask->SetInput(this->GetInput());
@@ -260,15 +259,13 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   filterConvertMask->Update();
 
   //Create structuring element
-  typedef itk::BinaryBallStructuringElement<MaskPixelType, itkGetStaticConstMacro(OutputImageDimension)>
-  BinaryBallElementType;
+  using BinaryBallElementType = itk::BinaryBallStructuringElement<MaskPixelType, itkGetStaticConstMacro(OutputImageDimension)>;
   BinaryBallElementType kernel;
   kernel.SetRadius(this->m_MaskDilationSize);
   kernel.CreateStructuringElement();
 
   //Binary dilate the resampled Mask image
-  typedef itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, BinaryBallElementType>
-  BinaryDilateImageFilterType;
+  using BinaryDilateImageFilterType = itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, BinaryBallElementType>;
   typename BinaryDilateImageFilterType::Pointer filterDilateMask = BinaryDilateImageFilterType::New();
   filterDilateMask->SetInput(filterConvertMask->GetOutput());
   filterDilateMask->SetKernel(kernel);
@@ -276,12 +273,9 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   filterDilateMask->Update();
 
   //Resample mask to full size
-  typedef itk::ResampleImageFilter<MaskImageType, MaskImageType, MaskCoordRep>
-  ResampleFilterType;
-  typedef itk::CenteredAffineTransform<MaskCoordRep, itkGetStaticConstMacro(OutputImageDimension)>
-  TransformType;
-  typedef itk::NearestNeighborInterpolateImageFunction<MaskImageType, MaskCoordRep>
-  InterpolatorType;
+  using ResampleFilterType = itk::ResampleImageFilter<MaskImageType, MaskImageType, MaskCoordRep>;
+  using TransformType = itk::CenteredAffineTransform<MaskCoordRep, itkGetStaticConstMacro(OutputImageDimension)>;
+  using InterpolatorType = itk::NearestNeighborInterpolateImageFunction<MaskImageType, MaskCoordRep>;
 
   typename InterpolatorType::Pointer interpolator = InterpolatorType::New();
   typename TransformType::Pointer transform = TransformType::New();
@@ -333,8 +327,8 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   //Setup Progress reporter
   ProgressReporter progress(this, 0, region.GetNumberOfPixels());
 
-  typedef itk::ImageRegionIteratorWithIndex<OutputImageType> OutputIteratorType;
-  typedef itk::ImageRegionConstIterator<MaskImageType> MaskIteratorType;
+  using OutputIteratorType = itk::ImageRegionIteratorWithIndex<OutputImageType>;
+  using MaskIteratorType = itk::ImageRegionConstIterator<MaskImageType>;
 
   OutputIteratorType itOutput(OutputImage, region);
   MaskIteratorType itMask(MaskImage, region);

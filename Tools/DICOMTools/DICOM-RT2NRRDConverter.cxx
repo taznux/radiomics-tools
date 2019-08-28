@@ -46,30 +46,30 @@
 
 
 constexpr unsigned int Dimension = 3;
-typedef unsigned char PixelType;
-typedef short CTPixelType;
-typedef itk::Point< double, Dimension > PointType;
+using PixelType = unsigned char;
+using CTPixelType = short;
+using PointType = itk::Point< double, Dimension >;
 
-typedef itk::PolygonSpatialObject<2> PolygonType;
-typedef PolygonType::Pointer PolygonPointer;
-typedef itk::SpatialObjectPoint<2> PolygonPointType;
+using PolygonType = itk::PolygonSpatialObject<2>;
+using PolygonPointer = PolygonType::Pointer;
+using PolygonPointType = itk::SpatialObjectPoint<2>;
 
-typedef itk::Image< PixelType, Dimension >   ImageType;
-typedef itk::Image< PixelType, 2 >   ImageSliceType;
+using ImageType = itk::Image< PixelType, Dimension >;
+using ImageSliceType = itk::Image< PixelType, 2 >;
 
-typedef itk::Image< CTPixelType, Dimension >   CTImageType;
-typedef itk::Image< CTPixelType, 2 >   CTImageSliceType;
+using CTImageType = itk::Image< CTPixelType, Dimension >;
+using CTImageSliceType = itk::Image< CTPixelType, 2 >;
 
-typedef itk::GroupSpatialObject<2> GroupType;
-//typedef itk::SpatialObjectToImageFilter<GroupType, ImageSliceType> SpatialObjectToImageFilterType;
-typedef itk::MaskedSpatialObjectToImageFilter<GroupType, ImageSliceType> SpatialObjectToImageFilterType;
+using GroupType = itk::GroupSpatialObject<2>;
+//using SpatialObjectToImageFilterType = itk::SpatialObjectToImageFilter<GroupType, ImageSliceType>;
+using SpatialObjectToImageFilterType = itk::MaskedSpatialObjectToImageFilter<GroupType, ImageSliceType>;
 
 void FillMedicalImageInformation(const gdcm::Reader &reader);
 
 ImageType::Pointer readFile(std::string fileName)
 {
 
-  typedef itk::ImageFileReader< ImageType >  ReaderType;
+  using ReaderType = itk::ImageFileReader< ImageType >;
   ReaderType::Pointer reader = ReaderType::New();
   reader->SetFileName(fileName);
   try
@@ -88,7 +88,7 @@ ImageType::Pointer readFile(std::string fileName)
 
 void writeFile(ImageType::Pointer image, std::string outputFileName)
 {
-  typedef itk::ImageFileWriter< ImageType >  WriterType;
+  using WriterType = itk::ImageFileWriter< ImageType >;
   WriterType::Pointer writer = WriterType::New();
   writer->SetInput(image);
   writer->SetUseCompression(true);
@@ -108,7 +108,7 @@ void writeFile(ImageType::Pointer image, std::string outputFileName)
 
 void write2DFile(ImageSliceType::Pointer image, std::string outputFileName)
 {
-  typedef itk::ImageFileWriter< ImageSliceType >  WriterType;
+  using WriterType = itk::ImageFileWriter< ImageSliceType >;
   WriterType::Pointer writer = WriterType::New();
   writer->SetInput(image);
   writer->SetFileName(outputFileName);
@@ -127,7 +127,7 @@ void write2DFile(ImageSliceType::Pointer image, std::string outputFileName)
 
 void resetImage(ImageType::Pointer image)
 {
-  itk::ImageRegionIterator<ImageType> imageIt(image, image->GetLargestPossibleRegion()) ;
+  itk::ImageRegionIterator<ImageType> imageIt(image, image->GetLargestPossibleRegion());
   imageIt.GoToBegin();
   while (!imageIt.IsAtEnd())
   {
@@ -137,7 +137,7 @@ void resetImage(ImageType::Pointer image)
 }
 void reset2DImage(ImageSliceType::Pointer imageSlice)
 {
-  itk::ImageRegionIterator<ImageSliceType> imageIt(imageSlice, imageSlice->GetLargestPossibleRegion()) ;
+  itk::ImageRegionIterator<ImageSliceType> imageIt(imageSlice, imageSlice->GetLargestPossibleRegion());
   imageIt.GoToBegin();
   while (!imageIt.IsAtEnd())
   {
@@ -228,7 +228,7 @@ class Reader;
 PointType point;
 //ITK spatial object to image filter segmentation definitions
 PolygonType::PointListType pointList;
-typedef itk::ImageFileWriter< ImageType > WriterType;
+using WriterType = itk::ImageFileWriter< ImageType >;
 
 PolygonType::Pointer polygon;
 PolygonPointType p;
@@ -288,14 +288,14 @@ int main(int argc, char *argv[])
 
   //Step 1. is to read in the dicom image to retreive origin, spacing, etc.
   //the following code is based on the itk example: DicomSeriesReadImageWrite2.cxx
-  typedef itk::ImageSeriesReader< CTImageType >    ReaderType;
+  using ReaderType = itk::ImageSeriesReader< CTImageType >;
   ReaderType::Pointer reader = ReaderType::New();
-  typedef itk::GDCMImageIO     ImageIOType;
+  using ImageIOType = itk::GDCMImageIO;
   ImageIOType::Pointer dicomIO = ImageIOType::New();
 
   reader->SetImageIO( dicomIO );
 
-  typedef itk::GDCMSeriesFileNames NamesGeneratorType;
+  using NamesGeneratorType = itk::GDCMSeriesFileNames;
   NamesGeneratorType::Pointer nameGenerator = NamesGeneratorType::New();
   nameGenerator->SetUseSeriesDetails( true );
   nameGenerator->AddSeriesRestriction("0008|0021" );
@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
     std::cout << std::endl << argv[1] << std::endl << std::endl;
     std::cout << "Contains the following DICOM Series: ";
     std::cout << std::endl << std::endl;
-    typedef std::vector< std::string >  SeriesIdContainer;
+    using SeriesIdContainer = std::vector< std::string >;
 
     const SeriesIdContainer &seriesUID = nameGenerator->GetSeriesUIDs();
 
@@ -325,7 +325,7 @@ int main(int argc, char *argv[])
 
     std::cout << "Now reading series: " << seriesIdentifier << std::endl;
 
-    typedef std::vector< std::string >   FileNamesContainer;
+    using FileNamesContainer = std::vector< std::string >;
     FileNamesContainer fileNames;
 
     fileNames = nameGenerator->GetFileNames( seriesIdentifier );
@@ -344,7 +344,7 @@ int main(int argc, char *argv[])
     std::cout << argc << std::endl;
     if (argc < 5)
     {
-      typedef itk::ImageFileWriter< CTImageType > WriterType;
+      using WriterType = itk::ImageFileWriter< CTImageType >;
       WriterType::Pointer writer = WriterType::New();
 
       std::string imageFilename = argv[3];
@@ -389,7 +389,7 @@ int main(int argc, char *argv[])
 
   //we need to create a temporary 2D slice as well...
   ImageType::RegionType inputRegion = image->GetLargestPossibleRegion();
-  typedef itk::ExtractImageFilter< ImageType, ImageSliceType> FilterType;
+  using FilterType = itk::ExtractImageFilter< ImageType, ImageSliceType>;
   FilterType::Pointer filter = FilterType::New();
   ImageType::SizeType size = ImageType::SizeType(inputRegion.GetSize());
   size[2] = 0;
@@ -571,7 +571,7 @@ int main(int argc, char *argv[])
 
     if (iPointsOutsideBoundary > 0)
     {
-      std::cout <<  " --" << iPointsOutsideBoundary << " contour points detected outside image boundary. Please check the output volume. " ;
+      std::cout <<  " --" << iPointsOutsideBoundary << " contour points detected outside image boundary. Please check the output volume. ";
       iPointsOutsideBoundary = 0;
     }
 

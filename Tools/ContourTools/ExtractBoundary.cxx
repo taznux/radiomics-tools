@@ -72,7 +72,7 @@
 
 
 // Definition of Feature Extraction
-typedef itk::MinimumMaximumImageCalculator< InputImageType > MaxMinFilterType;
+using MaxMinFilterType = itk::MinimumMaximumImageCalculator< InputImageType >;
 
 using namespace std;
 
@@ -175,19 +175,19 @@ int main( int argc, char *argv[] )
 
 
     //Definition of Morphological operation sturcture elements
-    typedef itk::FlatStructuringElement<Dimension> StructuringElementType;
-    typedef itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, StructuringElementType> DilateFilterType;
-    typedef itk::BinaryErodeImageFilter<MaskImageType, MaskImageType, StructuringElementType> ErodeFilterType;
+    using StructuringElementType = itk::FlatStructuringElement<Dimension>;
+    using DilateFilterType = itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, StructuringElementType>;
+    using ErodeFilterType = itk::BinaryErodeImageFilter<MaskImageType, MaskImageType, StructuringElementType>;
 
-    typedef itk::AndImageFilter <MaskImageType> AndImageFilterType;
-    typedef itk::SubtractImageFilter <MaskImageType, MaskImageType> SubtractImageFilterType;
+    using AndImageFilterType = itk::AndImageFilter <MaskImageType>;
+    using SubtractImageFilterType = itk::SubtractImageFilter <MaskImageType, MaskImageType>;
 
-    typedef itk::Image<MaskPixelType, Dimension-1> MaskImage2DType;
-    typedef itk::FlatStructuringElement<Dimension-1> StructuringElement2DType;
-    typedef itk::BinaryDilateImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType> DilateFilter2DType;
-    typedef itk::BinaryErodeImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType> ErodeFilter2DType;
+    using MaskImage2DType = itk::Image<MaskPixelType, Dimension-1>;
+    using StructuringElement2DType = itk::FlatStructuringElement<Dimension-1>;
+    using DilateFilter2DType = itk::BinaryDilateImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType>;
+    using ErodeFilter2DType = itk::BinaryErodeImageFilter<MaskImage2DType, MaskImage2DType, StructuringElement2DType>;
 
-    typedef itk::SliceBySliceImageFilter<MaskImageType, MaskImageType> SliceBySliceFilterType;
+    using SliceBySliceFilterType = itk::SliceBySliceImageFilter<MaskImageType, MaskImageType>;
 
     StructuringElementType::RadiusType elementRadius;
     elementRadius.Fill(static_cast<unsigned int>(round(radius/inputImageSpacing[0])));
@@ -367,9 +367,9 @@ int main( int argc, char *argv[] )
 
 
 
-    std::cout << "writeImage_spacing = " << outputLabelImage->GetSpacing() << std::endl ;
-    std::cout << "writeImage_origin  = "  << outputLabelImage->GetOrigin() << std::endl ;
-    std::cout << "writeImage_LargestPossibleRegion = " << outputLabelImage->GetLargestPossibleRegion() << std::endl ;
+    std::cout << "writeImage_spacing = " << outputLabelImage->GetSpacing() << std::endl;
+    std::cout << "writeImage_origin  = "  << outputLabelImage->GetOrigin() << std::endl;
+    std::cout << "writeImage_LargestPossibleRegion = " << outputLabelImage->GetLargestPossibleRegion() << std::endl;
 
 
     ////////To write Output images /////////////////////

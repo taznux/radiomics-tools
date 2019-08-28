@@ -35,7 +35,7 @@ int main( int argc, char *argv[] )
   sphereImage->Allocate();
   sphereImage->FillBuffer( 0 );
 
-  typedef itk::ImageDuplicator< LabelImageType > DuplicatorType;
+  using DuplicatorType = itk::ImageDuplicator< LabelImageType >;
   DuplicatorType::Pointer duplicator = DuplicatorType::New();
   duplicator->SetInputImage(labelImage);
   duplicator->Update();
@@ -78,10 +78,10 @@ int main( int argc, char *argv[] )
 
   // make a sphere
   {
-    typedef itk::EllipseSpatialObject<3> EllipseType;
-    typedef itk::SpatialObjectToImageFilter<EllipseType, LabelImageType> SpatialObjectToImageFilterType;
+    using EllipseType = itk::EllipseSpatialObject<3>;
+    using SpatialObjectToImageFilterType = itk::SpatialObjectToImageFilter<EllipseType, LabelImageType>;
 
-    typedef EllipseType::TransformType TransformType;
+    using TransformType = EllipseType::TransformType;
 
     SpatialObjectToImageFilterType::Pointer sphereFilter = SpatialObjectToImageFilterType::New();
 

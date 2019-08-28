@@ -13,18 +13,18 @@
 #include <boost/algorithm/string.hpp>
 
 
-typedef signed short ShortPixelType;
-typedef unsigned short UShortPixelType;
-typedef float FloatPixelType;
-typedef itk::Image< ShortPixelType, 3 > ShortImageType;
-typedef itk::Image< ShortPixelType, 2 > ShortDICOMImageType;
-typedef itk::Image< UShortPixelType, 3 > UShortImageType;
-typedef itk::Image< UShortPixelType, 2 > UShortDICOMImageType;
-typedef itk::Image< FloatPixelType, 3 > FloatImageType;
-typedef itk::Image< FloatPixelType, 2 > FloatDICOMImageType;
+using ShortPixelType = signed short;
+using UShortPixelType = unsigned short;
+using FloatPixelType = float;
+using ShortImageType = itk::Image< ShortPixelType, 3 >;
+using ShortDICOMImageType = itk::Image< ShortPixelType, 2 >;
+using UShortImageType = itk::Image< UShortPixelType, 3 >;
+using UShortDICOMImageType = itk::Image< UShortPixelType, 2 >;
+using FloatImageType = itk::Image< FloatPixelType, 3 >;
+using FloatDICOMImageType = itk::Image< FloatPixelType, 2 >;
 
-typedef itk::GDCMSeriesFileNames NamesGeneratorType;
-typedef std::vector< std::string >   FileNamesContainer;
+using NamesGeneratorType = itk::GDCMSeriesFileNames;
+using FileNamesContainer = std::vector< std::string >;
 
 int refineString(std::string &in)
 {
@@ -75,8 +75,8 @@ std::string initialName(std::string &fullName)
 
 std::string getModality(std::string fileName)
 {
-	typedef itk::ImageFileReader<ShortDICOMImageType> ReaderType;
-	typedef itk::GDCMImageIO ImageIOType;
+	using ReaderType = itk::ImageFileReader<ShortDICOMImageType>;
+	using ImageIOType = itk::GDCMImageIO;
 
 	ImageIOType::Pointer dicomIO = ImageIOType::New();
 	ReaderType::Pointer reader = ReaderType::New();
@@ -96,8 +96,8 @@ std::string getModality(std::string fileName)
 template <typename TImageType>
 int readAndWrite(FileNamesContainer fileNames, std::string seriesDirectory)
 {
-	typedef itk::ImageSeriesReader<TImageType> ReaderType;
-	typedef itk::GDCMImageIO ImageIOType;
+	using ReaderType = itk::ImageSeriesReader<TImageType>;
+	using ImageIOType = itk::GDCMImageIO;
 
 	ImageIOType::Pointer dicomIO = ImageIOType::New();
 	typename ReaderType::Pointer reader = ReaderType::New();
@@ -224,7 +224,7 @@ int readAndWrite(FileNamesContainer fileNames, std::string seriesDirectory)
 
 
 	////////To write Output images /////////////////////
-	//typedef itk::ImageSeriesWriter<ImageType> WriterType;
+	//using WriterType = itk::ImageSeriesWriter<ImageType>;
 
 	//nameGenerator->SetOutputDirectory(seriesDirectory);
 	//FileNamesContainer OutputImageNames;
@@ -239,7 +239,7 @@ int readAndWrite(FileNamesContainer fileNames, std::string seriesDirectory)
 	std::cout << "Writing the image as " << std::endl << std::endl;
 	std::cout << seriesDirectory << std::endl << std::endl;
 
-	typedef itk::ImageFileWriter<TImageType> SingleOutImageWriterType;
+	using SingleOutImageWriterType = itk::ImageFileWriter<TImageType>;
 	typename SingleOutImageWriterType::Pointer OutWriter = SingleOutImageWriterType::New();
 	OutWriter->SetUseCompression(true);
 	OutWriter->SetInput(reader->GetOutput());
@@ -271,7 +271,7 @@ int main(int argc, char *argv[])
 
 	try
 	{
-		typedef std::vector< std::string > SeriesIdContainer;
+		using SeriesIdContainer = std::vector< std::string >;
 		const SeriesIdContainer &seriesUID = nameGenerator->GetSeriesUIDs();
 
 		if (seriesUID.size() > 0)

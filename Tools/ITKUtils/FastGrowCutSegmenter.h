@@ -55,7 +55,7 @@ public:
 const float  DIST_INF = std::numeric_limits<float>::max();
 const float  DIST_EPSION = 1e-3;
 unsigned char NNGBH = 26;
-typedef float FPixelType;
+using FPixelType = float;
 
 template<typename SrcPixelType, typename LabPixelType>
 class FastGrowCut

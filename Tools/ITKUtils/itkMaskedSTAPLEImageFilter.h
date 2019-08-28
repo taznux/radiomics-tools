@@ -122,11 +122,11 @@ class MaskedSTAPLEImageFilter:
     public ImageToImageFilter< TInputImage, TOutputImage >
 {
 public:
-    /** Standard class typedefs. */
-    typedef MaskedSTAPLEImageFilter                               Self;
-    typedef ImageToImageFilter< TInputImage, TOutputImage > Superclass;
-    typedef SmartPointer< Self >                            Pointer;
-    typedef SmartPointer< const Self >                      ConstPointer;
+    /** Standard class type alias. */
+    using Self = MaskedSTAPLEImageFilter;
+    using Superclass = ImageToImageFilter< TInputImage, TOutputImage >;
+    using Pointer = SmartPointer< Self >;
+    using ConstPointer = SmartPointer< const Self >;
 
     /** Method for creation through the object factory. */
     itkNewMacro(Self);
@@ -136,26 +136,26 @@ public:
 
     /** Extract some information from the image types.  Dimensionality
      * of the two images is assumed to be the same. */
-    typedef typename TOutputImage::PixelType                   OutputPixelType;
-    typedef typename TInputImage::PixelType                    InputPixelType;
-    typedef typename TMaskImage::PixelType                     MaskPixelType;
-    typedef typename NumericTraits< InputPixelType >::RealType RealType;
+    using OutputPixelType = typename TOutputImage::PixelType;
+    using InputPixelType = typename TInputImage::PixelType;
+    using MaskPixelType = typename TMaskImage::PixelType;
+    using RealType = typename NumericTraits< InputPixelType >::RealType;
 
     /** Extract some information from the image types.  Dimensionality
      * of the two images is assumed to be the same. */
     itkStaticConstMacro(ImageDimension, unsigned int,
                         TOutputImage::ImageDimension);
 
-    /** Image typedef support */
-    typedef TInputImage                       InputImageType;
-    typedef typename InputImageType::Pointer  InputImagePointer;
-    typedef TOutputImage                      OutputImageType;
-    typedef typename OutputImageType::Pointer OutputImagePointer;
-    typedef TMaskImage                        MaskImageType;
-    typedef typename MaskImageType::Pointer MaskImagePointer;
+    /** Image type alias support */
+    using InputImageType = TInputImage;
+    using InputImagePointer = typename InputImageType::Pointer;
+    using OutputImageType = TOutputImage;
+    using OutputImagePointer = typename OutputImageType::Pointer;
+    using MaskImageType = TMaskImage;
+    using MaskImagePointer = typename MaskImageType::Pointer;
 
-    /** Superclass typedefs. */
-    typedef typename Superclass::OutputImageRegionType OutputImageRegionType;
+    /** Superclass type alias. */
+    using OutputImageRegionType = typename Superclass::OutputImageRegionType;
 
     itkSetInputMacro(MaskImage, MaskImageType);
     itkGetInputMacro(MaskImage, MaskImageType);

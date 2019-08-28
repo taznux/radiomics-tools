@@ -61,11 +61,11 @@ template<class TInputImage,
 {
 
  public:
-  /** Standard class typedefs. */
-  typedef GrowCutSegmentationImageFilter               Self;
-  typedef ImageToImageFilter<TInputImage,TOutputImage> Superclass;
-  typedef SmartPointer<Self>                           Pointer;
-  typedef SmartPointer<const Self>                     ConstPointer;
+  /** Standard class type alias. */
+  using Self = GrowCutSegmentationImageFilter;
+  using Superclass = ImageToImageFilter<TInputImage,TOutputImage>;
+  using Pointer = SmartPointer<Self>;
+  using ConstPointer = SmartPointer<const Self>;
 
   /** Method for creation through the object factory. */
   itkNewMacro(Self);
@@ -74,28 +74,28 @@ template<class TInputImage,
   itkTypeMacro(GrowCutSegmentationImageFilter,
                ImageToImageFilter);
 
-  /** Image related typedefs. */
+  /** Image related type alias. */
   itkStaticConstMacro(ImageDimension, unsigned int,
                       TInputImage::ImageDimension );
 
-  typedef TInputImage                           InputImageType;
-  typedef typename InputImageType::Pointer      InputImagePointer;
-  typedef typename InputImageType::ConstPointer InputImageConstPointer;
+  using InputImageType = TInputImage;
+  using InputImagePointer = typename InputImageType::Pointer;
+  using InputImageConstPointer = typename InputImageType::ConstPointer;
 
-  typedef typename InputImageType::PixelType InputPixelType;
-  typedef typename InputImageType::IndexType InputIndexType;
-  typedef typename InputImageType::SizeType  SizeType;
+  using InputPixelType = typename InputImageType::PixelType;
+  using InputIndexType = typename InputImageType::IndexType;
+  using SizeType = typename InputImageType::SizeType;
 
-  typedef TOutputImage                         OutputImageType;
-  typedef typename OutputImageType::Pointer    OutputImagePointer;
-  typedef typename OutputImageType::RegionType OutputImageRegionType;
-  typedef typename OutputImageType::PixelType  OutputPixelType;
-  typedef typename OutputImageType::IndexType  OutputIndexType;
-  typedef typename InputImageType::SizeType    OutputSizeType;
+  using OutputImageType = TOutputImage;
+  using OutputImagePointer = typename OutputImageType::Pointer;
+  using OutputImageRegionType = typename OutputImageType::RegionType;
+  using OutputPixelType = typename OutputImageType::PixelType;
+  using OutputIndexType = typename OutputImageType::IndexType;
+  using OutputSizeType = typename InputImageType::SizeType;
 
 
   /** Smart Pointer type to a DataObject. */
-  typedef typename DataObject::Pointer DataObjectPointer;
+  using DataObjectPointer = typename DataObject::Pointer;
 
 
    /** Image dimension constants */
@@ -104,17 +104,17 @@ template<class TInputImage,
   itkStaticConstMacro(OutputImageDimension, unsigned int,
                       TOutputImage::ImageDimension);
 
-   /** Index typedef support. */
-  typedef Index<itkGetStaticConstMacro(InputImageDimension)> IndexType;
+   /** Index type alias support. */
+  using IndexType = Index<itkGetStaticConstMacro(InputImageDimension)>;
 
- /** InputSizeType typedef support **/
-  typedef typename InputImageType::SizeType InputSizeType;
+ /** InputSizeType type alias support **/
+  using InputSizeType = typename InputImageType::SizeType;
 
-  /* NodeContainer typedef support for storing a set of seed points */
-  typedef VectorContainer<unsigned int, IndexType> NodeContainer;
+  /* NodeContainer type alias support for storing a set of seed points */
+  using NodeContainer = VectorContainer<unsigned int, IndexType>;
 
   /* NodeContainer pointer support */
-  typedef typename NodeContainer::Pointer NodeContainerPointer;
+  using NodeContainerPointer = typename NodeContainer::Pointer;
 
   /** enum of the growcut segmentation. NoLabel represents points
     that have not been assigned any label. Object represents points
@@ -123,14 +123,14 @@ template<class TInputImage,
   enum LabelType { NoLabel, ObjectLabel, BackgroundLabel };
 
 
-  /** WeightImage typedef support */
+  /** WeightImage type alias support */
   /* indicates the strength of a label for a given cell */
-  typedef Image<TWeightPixelType, itkGetStaticConstMacro(InputImageDimension) > WeightImageType;
+  using WeightImageType = Image<TWeightPixelType, itkGetStaticConstMacro(InputImageDimension) >;
 
-  /** WeightImagePointer typedef support. */
-  typedef typename WeightImageType::Pointer WeightImagePointer;
+  /** WeightImagePointer type alias support. */
+  using WeightImagePointer = typename WeightImageType::Pointer;
 
-  typedef TWeightPixelType WeightPixelType;
+  using WeightPixelType = TWeightPixelType;
 
   /** Set the Input Image **/
   void SetInputImage( const InputImageType *in)
