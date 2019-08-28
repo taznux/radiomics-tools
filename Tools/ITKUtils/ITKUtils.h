@@ -38,7 +38,7 @@ using MaskPixelType = short;
 
 constexpr unsigned int Dimension = 3;
 constexpr unsigned int OutputDimension = 2;
-MaskPixelType maskValue = 1;
+constexpr MaskPixelType maskValue = 1;
 
 using InputImageType = itk::Image < InputPixelType, Dimension >;
 using InternalImageType = itk::Image < InternalPixelType, Dimension >;
