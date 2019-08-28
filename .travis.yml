@@ -39,7 +39,7 @@ before_script:
 - make --jobs=$NUM_THREADS --keep-going
 - cd -
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -o miniconda_install.sh; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o miniconda_Install.sh; fi
-- bash miniconda_install.sh -b -f -p "$HOME/miniconda/"
+- bash miniconda_install.sh -b -f -p "$HOME/miniconda/" || true
 - export PATH="$HOME/miniconda/bin:$PATH"
 - hash -r
 - conda config --set always_yes yes --set changeps1 no
