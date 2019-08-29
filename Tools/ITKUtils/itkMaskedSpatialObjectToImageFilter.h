@@ -46,8 +46,7 @@ namespace itk
  *  to Image Conversions", Insight Journal, 2006 July-December.
  */
 template <class TInputSpatialObject, class TOutputImage>
-class ITK_EXPORT MaskedSpatialObjectToImageFilter :
-  public SpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
+class ITK_EXPORT MaskedSpatialObjectToImageFilter : public SpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
 {
 public:
   /** Standard class type alias. */
@@ -86,13 +85,13 @@ public:
   using MaskImageConstPointer = typename MaskImageType::ConstPointer;
 
   /** Set/Get the image input of this process object.  */
-  virtual void SetInput( const InputSpatialObjectType *object);
+  virtual void SetInput(const InputSpatialObjectType *object);
   const InputSpatialObjectType *GetInput(void);
 
   /** Set/Get the input mask image to help speed up processing.
     * If a mask is not specified, one will be automatically generated
     * using GetMaskResampleFactor(). */
-  virtual void SetMask (const MaskImageType *mask);
+  virtual void SetMask(const MaskImageType *mask);
   const MaskImageType *GetMask(void);
 
   /** If the Mask image is not set, this filter will automatically
@@ -121,16 +120,15 @@ protected:
   virtual void SetupOutputImage();
   virtual void GenerateMask();
 
-  bool         m_UserSuppliedMask;
-  double       m_MaskResampleFactor;
+  bool m_UserSuppliedMask;
+  double m_MaskResampleFactor;
   unsigned int m_MaskDilationSize;
 
   virtual void PrintSelf(std::ostream &os, Indent indent) const;
 
 private:
   MaskedSpatialObjectToImageFilter(const Self &); //purposely not implemented
-  void operator=(const Self &); //purposely not implemented
-
+  void operator=(const Self &);                   //purposely not implemented
 };
 
 } // end namespace itk
