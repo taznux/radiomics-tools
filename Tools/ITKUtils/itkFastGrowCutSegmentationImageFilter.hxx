@@ -179,7 +179,7 @@ ComputeLabelVolumes(TOutputImage *outputImage, vcl_vector< unsigned > &volumes,
     //   }
 
 #else
-    typedef LabelImageToShapeLabelMapFilter< OutputImageType > LabelFilterType;
+    using LabelFilterType = LabelImageToShapeLabelMapFilter< OutputImageType >;
     typename LabelFilterType::Pointer labelFilter = LabelFilterType::New();
 
     labelFilter->SetInput(outputImage);
@@ -299,7 +299,7 @@ FastGrowCutSegmentationImageFilter<TInputImage, TOutputImage>
     //   }
 
     /*
-    typedef ImageFileWriter < OutputImageType > WriterType;
+    using WriterType = ImageFileWriter < OutputImageType >;
     typename WriterType::Pointer writer = WriterType::New();
 
     vcl_string outfilename = "segmented_img.mhd";

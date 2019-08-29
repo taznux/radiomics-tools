@@ -46,22 +46,21 @@ namespace itk
  *  to Image Conversions", Insight Journal, 2006 July-December.
  */
 template <class TInputSpatialObject, class TOutputImage>
-class ITK_EXPORT MaskedSpatialObjectToImageFilter :
-  public SpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
+class ITK_EXPORT MaskedSpatialObjectToImageFilter : public SpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
 {
 public:
-  /** Standard class typedefs. */
-  typedef MaskedSpatialObjectToImageFilter Self;
-  typedef SpatialObjectToImageFilter<TInputSpatialObject, TOutputImage> Superclass;
-  typedef SmartPointer<Self>  Pointer;
-  typedef SmartPointer<const Self>  ConstPointer;
-  typedef typename TOutputImage::SizeType   SizeType;
-  typedef typename TOutputImage::PointType   PointType;
-  typedef TOutputImage  OutputImageType;
-  typedef typename OutputImageType::PixelType OutputPixelType;
-  typedef typename OutputImageType::Pointer OutputImagePointer;
-  typedef typename OutputImageType::ValueType  ValueType;
-  typedef typename OutputImageType::SpacingType SpacingType;
+  /** Standard class type alias. */
+  using Self = MaskedSpatialObjectToImageFilter;
+  using Superclass = SpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>;
+  using Pointer = SmartPointer<Self>;
+  using ConstPointer = SmartPointer<const Self>;
+  using SizeType = typename TOutputImage::SizeType;
+  using PointType = typename TOutputImage::PointType;
+  using OutputImageType = TOutputImage;
+  using OutputPixelType = typename OutputImageType::PixelType;
+  using OutputImagePointer = typename OutputImageType::Pointer;
+  using ValueType = typename OutputImageType::ValueType;
+  using SpacingType = typename OutputImageType::SpacingType;
 
   /** Method for creation through the object factory. */
   itkNewMacro(Self);
@@ -69,30 +68,30 @@ public:
   /** Run-time type information (and related methods). */
   itkTypeMacro(MaskedSpatialObjectToImageFilter, SpatialObjectToImageFilter);
 
-  /** Superclass typedefs. */
-  typedef typename Superclass::OutputImageRegionType OutputImageRegionType;
+  /** Superclass type alias. */
+  using OutputImageRegionType = typename Superclass::OutputImageRegionType;
 
-  /** Some typedefs for input SpatialObject. */
-  typedef TInputSpatialObject InputSpatialObjectType;
-  typedef typename InputSpatialObjectType::Pointer        InputSpatialObjectPointer;
-  typedef typename InputSpatialObjectType::ConstPointer   InputSpatialObjectConstPointer;
-  typedef typename TInputSpatialObject::ChildrenListType  ChildrenListType;
+  /** Some type alias for input SpatialObject. */
+  using InputSpatialObjectType = TInputSpatialObject;
+  using InputSpatialObjectPointer = typename InputSpatialObjectType::Pointer;
+  using InputSpatialObjectConstPointer = typename InputSpatialObjectType::ConstPointer;
+  using ChildrenListType = typename TInputSpatialObject::ChildrenListType;
 
-  /** Some convenient typedefs. */
-  typedef double                                          MaskCoordRep;
-  typedef unsigned char                                   MaskPixelType;
-  typedef itk::Image<MaskPixelType, itkGetStaticConstMacro(OutputImageDimension)> MaskImageType;
-  typedef typename MaskImageType::Pointer                 MaskImagePointer;
-  typedef typename MaskImageType::ConstPointer            MaskImageConstPointer;
+  /** Some convenient type alias. */
+  using MaskCoordRep = double;
+  using MaskPixelType = unsigned char;
+  using MaskImageType = itk::Image<MaskPixelType, itkGetStaticConstMacro(OutputImageDimension)>;
+  using MaskImagePointer = typename MaskImageType::Pointer;
+  using MaskImageConstPointer = typename MaskImageType::ConstPointer;
 
   /** Set/Get the image input of this process object.  */
-  virtual void SetInput( const InputSpatialObjectType *object);
+  virtual void SetInput(const InputSpatialObjectType *object);
   const InputSpatialObjectType *GetInput(void);
 
   /** Set/Get the input mask image to help speed up processing.
     * If a mask is not specified, one will be automatically generated
     * using GetMaskResampleFactor(). */
-  virtual void SetMask (const MaskImageType *mask);
+  virtual void SetMask(const MaskImageType *mask);
   const MaskImageType *GetMask(void);
 
   /** If the Mask image is not set, this filter will automatically
@@ -121,16 +120,15 @@ protected:
   virtual void SetupOutputImage();
   virtual void GenerateMask();
 
-  bool         m_UserSuppliedMask;
-  double       m_MaskResampleFactor;
+  bool m_UserSuppliedMask;
+  double m_MaskResampleFactor;
   unsigned int m_MaskDilationSize;
 
   virtual void PrintSelf(std::ostream &os, Indent indent) const;
 
 private:
   MaskedSpatialObjectToImageFilter(const Self &); //purposely not implemented
-  void operator=(const Self &); //purposely not implemented
-
+  void operator=(const Self &);                   //purposely not implemented
 };
 
 } // end namespace itk

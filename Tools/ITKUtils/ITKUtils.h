@@ -29,46 +29,46 @@
 using namespace std;
 
 // Definition of Data type
-typedef float InputPixelType;
-typedef float InternalPixelType;
-typedef float OutputPixelType;
+using InputPixelType = float;
+using InternalPixelType = float;
+using OutputPixelType = float;
 
-typedef short LabelPixelType;
-typedef short MaskPixelType;
+using LabelPixelType = short;
+using MaskPixelType = short;
 
-const unsigned int Dimension = 3;
-const unsigned int OutputDimension = 2;
-const MaskPixelType maskValue = 1;
+constexpr unsigned int Dimension = 3;
+constexpr unsigned int OutputDimension = 2;
+constexpr MaskPixelType maskValue = 1;
 
-typedef itk::Image < InputPixelType, Dimension >  InputImageType;
-typedef itk::Image < InternalPixelType, Dimension > InternalImageType;
-typedef itk::Image < OutputPixelType, OutputDimension > OutputImageType;
-typedef itk::Image < InputPixelType, Dimension - 1 > InputImage2DType;
+using InputImageType = itk::Image < InputPixelType, Dimension >;
+using InternalImageType = itk::Image < InternalPixelType, Dimension >;
+using OutputImageType = itk::Image < OutputPixelType, OutputDimension >;
+using InputImage2DType = itk::Image < InputPixelType, Dimension - 1 >;
 
-typedef itk::Image < LabelPixelType, Dimension> LabelImageType;
-typedef itk::Image < MaskPixelType, Dimension> MaskImageType;
-typedef itk::Image < MaskPixelType, Dimension - 1 > MaskImage2DType;
+using LabelImageType = itk::Image < LabelPixelType, Dimension>;
+using MaskImageType = itk::Image < MaskPixelType, Dimension>;
+using MaskImage2DType = itk::Image < MaskPixelType, Dimension - 1 >;
 
 
 // Definition of Properties
-typedef InputImageType::SpacingType    SpacingType;
-typedef InputImageType::PointType      OriginType;
-typedef InputImageType::RegionType     RegionType;
-typedef InputImageType::SizeType       SizeType;
-typedef InputImageType::IndexType      IndexType;
-typedef InputImageType::DirectionType  DirectionType;
+using SpacingType = InputImageType::SpacingType;
+using OriginType = InputImageType::PointType;
+using RegionType = InputImageType::RegionType;
+using SizeType = InputImageType::SizeType;
+using IndexType = InputImageType::IndexType;
+using DirectionType = InputImageType::DirectionType;
 
 
 //Definition of Morphological operation sturcture elements
-typedef itk::BinaryBallStructuringElement< MaskPixelType, Dimension > StructuringElementType;
-typedef itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, StructuringElementType> DilateFilterType;
-typedef itk::BinaryErodeImageFilter<MaskImageType, MaskImageType, StructuringElementType> ErodeFilterType;
+using StructuringElementType = itk::BinaryBallStructuringElement< MaskPixelType, Dimension >;
+using DilateFilterType = itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, StructuringElementType>;
+using ErodeFilterType = itk::BinaryErodeImageFilter<MaskImageType, MaskImageType, StructuringElementType>;
 
 
 template <typename TImageType>
 typename TImageType::Pointer ReadImageFile(string fileName)
 {
-  typedef itk::ImageFileReader<TImageType> ImageReaderType;
+  using ImageReaderType = itk::ImageFileReader<TImageType>;
 
   typename ImageReaderType::Pointer ImageReader = ImageReaderType::New();
   ImageReader->SetFileName(fileName);
@@ -84,7 +84,7 @@ template <typename TImageType>
 void WriteImageFile(typename TImageType::Pointer outputImage, string fileName)
 {
   ////////To write Output images /////////////////////
-  typedef itk::ImageFileWriter<TImageType> ImageWriterType;
+  using ImageWriterType = itk::ImageFileWriter<TImageType>;
 
   typename ImageWriterType::Pointer OutImageWriter = ImageWriterType::New();
   OutImageWriter->SetUseCompression(true);
@@ -109,7 +109,7 @@ typename TImageType::Pointer ApplyRoi(typename TImageType::Pointer inputImage, i
 {
   typename TImageType::Pointer roiImage;
 
-  typedef itk::RegionOfInterestImageFilter<TImageType, TImageType> RoiFilterType;
+  using RoiFilterType = itk::RegionOfInterestImageFilter<TImageType, TImageType>;
   typename RoiFilterType::Pointer RoiFilter = RoiFilterType::New();
   RoiFilter->SetRegionOfInterest(inputRegion);
 
@@ -238,7 +238,7 @@ void ExtractITKImageROI(typename itk::Image<PixelType, 3>::Pointer  im, const st
 {
 
   // Copy itk image ROI to vector
-  typedef itk::Image<PixelType, 3> ImageType;
+  using ImageType = itk::Image<PixelType, 3>;
   typename ImageType::IndexType index;
   long i, j, k, kk, DIMXYZ;
 
@@ -260,7 +260,7 @@ void UpdateITKImageROI(const std::vector<PixelType> &imROIVec, const std::vector
                        typename itk::Image<PixelType, 3>::Pointer im)
 {
 
-  typedef itk::Image<PixelType, 3> ImageType;
+  using ImageType = itk::Image<PixelType, 3>;
   typename ImageType::IndexType index;
   long i, j, k, kk;
 
@@ -285,7 +285,7 @@ void UpdateITKImageROI(const std::vector<PixelType> &imROIVec, const std::vector
 template< typename TImageType >
 typename TImageType::Pointer readImage(const char *fileName)
 {
-  typedef itk::ImageFileReader< TImageType > ImageReaderType;
+  using ImageReaderType = itk::ImageFileReader< TImageType >;
   typename ImageReaderType::Pointer reader = ImageReaderType::New();
   reader->SetFileName(fileName);
 
@@ -311,7 +311,7 @@ typename TImageType::Pointer readImage(const char *fileName)
  */
 template< typename TImageType > void writeImage(typename TImageType::Pointer img, const char *fileName)
 {
-  typedef itk::ImageFileWriter< TImageType > WriterType;
+  using WriterType = itk::ImageFileWriter< TImageType >;
 
   typename WriterType::Pointer writer = WriterType::New();
   writer->SetFileName( fileName );

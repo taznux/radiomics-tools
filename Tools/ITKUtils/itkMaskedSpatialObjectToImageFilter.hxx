@@ -36,8 +36,7 @@ namespace itk
 
 /** Constructor */
 template <class TInputSpatialObject, class TOutputImage>
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::MaskedSpatialObjectToImageFilter()
+MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::MaskedSpatialObjectToImageFilter()
 {
   this->SetNumberOfRequiredInputs(1);
   this->m_ChildrenDepth = 1;
@@ -45,7 +44,7 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
 
   for (unsigned int i = 0; i < itkGetStaticConstMacro(OutputImageDimension); i++)
   {
-    this->m_Spacing[i] = 0.0;
+    this->m_Spacing[i] = 1.0;
     this->m_Origin[i] = 0.0;
   }
 
@@ -58,32 +57,24 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   this->m_MaskDilationSize = 2;
 }
 
-
 /** Destructor */
 template <class TInputSpatialObject, class TOutputImage>
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::~MaskedSpatialObjectToImageFilter()
+MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::~MaskedSpatialObjectToImageFilter()
 {
 }
-
 
 /** Set the Input SpatialObject */
 template <class TInputSpatialObject, class TOutputImage>
-void
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::SetInput(const InputSpatialObjectType *input)
+void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::SetInput(const InputSpatialObjectType *input)
 {
   // Process object is not const-correct so the const_cast is required here
   this->ProcessObject::SetNthInput(0,
-                                   const_cast< InputSpatialObjectType * >( input ) );
+                                   const_cast<InputSpatialObjectType *>(input));
 }
-
 
 /** Set the Input Mask image */
 template <class TInputSpatialObject, class TOutputImage>
-void
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::SetMask(const MaskImageType *mask)
+void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::SetMask(const MaskImageType *mask)
 {
   if (mask)
   {
@@ -91,48 +82,39 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
 
     // Const-correct the mask image
     this->ProcessObject::SetNthInput(1,
-                                     const_cast< MaskImageType * >( mask ) );
+                                     const_cast<MaskImageType *>(mask));
   }
 }
-
 
 /** Get the input Spatial Object */
 template <class TInputSpatialObject, class TOutputImage>
 const typename MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::InputSpatialObjectType *
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::GetInput(void)
+MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::GetInput(void)
 {
   if (this->GetNumberOfInputs() < 1)
   {
     return 0;
   }
 
-  return static_cast<const TInputSpatialObject * >
-         (this->ProcessObject::GetInput(0) );
+  return static_cast<const TInputSpatialObject *>(this->ProcessObject::GetInput(0));
 }
-
 
 /** Get the input Mask image */
 template <class TInputSpatialObject, class TOutputImage>
 const typename MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::MaskImageType *
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::GetMask(void)
+MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::GetMask(void)
 {
   if (this->GetNumberOfInputs() < 2)
   {
     return 0;
   }
 
-  return static_cast<const MaskImageType * >
-         (this->ProcessObject::GetInput(1) );
+  return static_cast<const MaskImageType *>(this->ProcessObject::GetInput(1));
 }
-
 
 /** GenerateData */
 template <class TInputSpatialObject, class TOutputImage>
-void
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::GenerateData(void)
+void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::GenerateData(void)
 {
   this->SetupOutputImage();
 
@@ -143,13 +125,12 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   this->GenerateDataUsingMask();
 }
 
-
 /** SetupOutputImage */
 template <class TInputSpatialObject, class TOutputImage>
-void
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::SetupOutputImage(void)
+void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::SetupOutputImage(void)
 {
+  unsigned int i;
+
   // Get the input, and output pointers
   const InputSpatialObjectType *InputObject = this->GetInput();
   OutputImagePointer OutputImage = this->GetOutput();
@@ -157,23 +138,32 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   // Generate the image
   SizeType size;
 
+#if ITK_VERSION_MAJOR == 5
+  InputObject->ComputeFamilyBoundingBox(this->m_ChildrenDepth);
+  for (i = 0; i < this->ObjectDimension; i++)
+  {
+    size[i] = static_cast<SizeValueType>(
+        InputObject->GetFamilyBoundingBoxInWorldSpace()->GetMaximum()[i] - InputObject->GetFamilyBoundingBoxInWorldSpace()->GetMinimum()[i]);
+  }
+#else
   InputObject->ComputeBoundingBox();
   for (unsigned int i = 0; i < itkGetStaticConstMacro(ObjectDimension); i++)
   {
-    size[i] = (long unsigned int)(InputObject->GetBoundingBox()->GetMaximum()[i]
-                                  - InputObject->GetBoundingBox()->GetMinimum()[i]);
+    size[i] = (long unsigned int)(InputObject->GetBoundingBox()->GetMaximum()[i] - InputObject->GetBoundingBox()->GetMinimum()[i]);
   }
+#endif
 
   typename OutputImageType::IndexType index;
   index.Fill(0);
   typename OutputImageType::RegionType region;
 
   // If the size of the output has been explicitly specified, the filter
-  // will set the output size to the explicit size, otherwise the size from the spatial
+  // will set the output size to the explicit size, otherwise the size from the
+  // spatial
   // object's bounding box will be used as default.
 
   bool specified = false;
-  for (unsigned int i = 0; i < itkGetStaticConstMacro(OutputImageDimension); i++)
+  for (i = 0; i < this->OutputImageDimension; i++)
   {
     if (this->m_Size[i] != 0)
     {
@@ -184,66 +174,40 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
 
   if (specified)
   {
-    region.SetSize( this->m_Size );
+    region.SetSize(this->m_Size);
   }
   else
   {
-    this->m_Size = size;
-    region.SetSize( size );
+    region.SetSize(size);
   }
-  region.SetIndex( index );
+  region.SetIndex(index);
 
-  OutputImage->SetRegions(region); // set the region
-  // If the spacing has been explicitly specified, the filter
-  // will set the output spacing to that explicit spacing, otherwise the spacing from
-  // the spatial object is used as default.
-
-  specified = false;
-  for (unsigned int i = 0; i < itkGetStaticConstMacro(OutputImageDimension); i++)
-  {
-    if (this->m_Spacing[i] != 0)
-    {
-      specified = true;
-      break;
-    }
-  }
-
-  if (specified)
-  {
-    OutputImage->SetSpacing(this->m_Spacing);         // set spacing
-  }
-  else
-  {
-    OutputImage->SetSpacing(InputObject->GetIndexToObjectTransform()->GetScaleComponent());   // set spacing
-    for (unsigned int i = 0; i < itkGetStaticConstMacro(OutputImageDimension); i++)
-    {
-      this->m_Spacing[i] = OutputImage->GetSpacing()[i];
-    }
-  }
-  OutputImage->SetOrigin(this->m_Origin);                 // and origin
-  OutputImage->Allocate();                          // allocate the image
+  OutputImage->SetLargestPossibleRegion(region); //
+  OutputImage->SetBufferedRegion(region);        // set the region
+  OutputImage->SetRequestedRegion(region);       //
+  OutputImage->SetSpacing(this->m_Spacing);      // set spacing
+  OutputImage->SetOrigin(this->m_Origin);        //   and origin
+  OutputImage->SetDirection(this->m_Direction);
+  OutputImage->Allocate(); // allocate the image
 }
 
 /** Generate Mask */
 template <class TInputSpatialObject, class TOutputImage>
-void
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::GenerateMask(void)
+void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::GenerateMask(void)
 {
   // NOTE: The mask is store in Inputs(1)
-  MaskImagePointer maskImage = NULL;
+  MaskImagePointer maskImage = nullptr;
 
   //Convert SpatialObject to low-resolution mask
   //NOTE: We set the InsideValue and Outside values to max() and zero, and
   //      tell the filter to not use the object value to ensure that
   //      grey-scale SpatialObjects are converted to a binary mask.
-  typedef itk::SpatialObjectToImageFilter<TInputSpatialObject, MaskImageType>
-  SpatialObjectToImageFilterType;
+  using SpatialObjectToImageFilterType = itk::SpatialObjectToImageFilter<TInputSpatialObject, MaskImageType>;
   typename SpatialObjectToImageFilterType::Pointer filterConvertMask =
-    SpatialObjectToImageFilterType::New();
+      SpatialObjectToImageFilterType::New();
   filterConvertMask->SetInput(this->GetInput());
-  typename SpatialObjectToImageFilterType::SizeType maskSize;          //Set Size
-  typename SpatialObjectToImageFilterType::SpacingType maskSpacing;    //Set Spacing
+  typename SpatialObjectToImageFilterType::SizeType maskSize;       //Set Size
+  typename SpatialObjectToImageFilterType::SpacingType maskSpacing; //Set Spacing
   for (unsigned int dim = 0; dim < itkGetStaticConstMacro(OutputImageDimension); dim++)
   {
     maskSize[dim] = (unsigned int)(this->m_Size[dim] / this->m_MaskResampleFactor);
@@ -260,15 +224,13 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   filterConvertMask->Update();
 
   //Create structuring element
-  typedef itk::BinaryBallStructuringElement<MaskPixelType, itkGetStaticConstMacro(OutputImageDimension)>
-  BinaryBallElementType;
+  using BinaryBallElementType = itk::BinaryBallStructuringElement<MaskPixelType, itkGetStaticConstMacro(OutputImageDimension)>;
   BinaryBallElementType kernel;
   kernel.SetRadius(this->m_MaskDilationSize);
   kernel.CreateStructuringElement();
 
   //Binary dilate the resampled Mask image
-  typedef itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, BinaryBallElementType>
-  BinaryDilateImageFilterType;
+  using BinaryDilateImageFilterType = itk::BinaryDilateImageFilter<MaskImageType, MaskImageType, BinaryBallElementType>;
   typename BinaryDilateImageFilterType::Pointer filterDilateMask = BinaryDilateImageFilterType::New();
   filterDilateMask->SetInput(filterConvertMask->GetOutput());
   filterDilateMask->SetKernel(kernel);
@@ -276,12 +238,9 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   filterDilateMask->Update();
 
   //Resample mask to full size
-  typedef itk::ResampleImageFilter<MaskImageType, MaskImageType, MaskCoordRep>
-  ResampleFilterType;
-  typedef itk::CenteredAffineTransform<MaskCoordRep, itkGetStaticConstMacro(OutputImageDimension)>
-  TransformType;
-  typedef itk::NearestNeighborInterpolateImageFunction<MaskImageType, MaskCoordRep>
-  InterpolatorType;
+  using ResampleFilterType = itk::ResampleImageFilter<MaskImageType, MaskImageType, MaskCoordRep>;
+  using TransformType = itk::CenteredAffineTransform<MaskCoordRep, itkGetStaticConstMacro(OutputImageDimension)>;
+  using InterpolatorType = itk::NearestNeighborInterpolateImageFunction<MaskImageType, MaskCoordRep>;
 
   typename InterpolatorType::Pointer interpolator = InterpolatorType::New();
   typename TransformType::Pointer transform = TransformType::New();
@@ -290,9 +249,9 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   filterMaskResample->SetTransform(transform);
   filterMaskResample->SetInterpolator(interpolator);
   filterMaskResample->SetInput(filterDilateMask->GetOutput());
-  double finalMaskOrigin[itkGetStaticConstMacro(OutputImageDimension)];       //Set Origin
-  typename ResampleFilterType::SizeType finalMaskSize;         //Set Size
-  typename ResampleFilterType::SpacingType finalMaskSpacing;   //Set Spacing
+  double finalMaskOrigin[itkGetStaticConstMacro(OutputImageDimension)]; //Set Origin
+  typename ResampleFilterType::SizeType finalMaskSize;                  //Set Size
+  typename ResampleFilterType::SpacingType finalMaskSpacing;            //Set Spacing
   for (unsigned int dim = 0; dim < itkGetStaticConstMacro(OutputImageDimension); dim++)
   {
     finalMaskOrigin[dim] = this->m_Origin[dim];
@@ -312,14 +271,11 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
   this->SetMask(maskImage);
 }
 
-
 /** GenerateData (using Mask) */
 template <class TInputSpatialObject, class TOutputImage>
-void
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::GenerateDataUsingMask(void)
+void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::GenerateDataUsingMask(void)
 {
-  itkDebugMacro( << "MaskedSpatialObjectToImageFilter::Update() called");
+  itkDebugMacro(<< "MaskedSpatialObjectToImageFilter::Update() called");
 
   //Get the input, mask and output pointers
   const InputSpatialObjectType *InputObject = this->GetInput();
@@ -328,13 +284,13 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
 
   //Get output region
   typename OutputImageType::RegionType region =
-    OutputImage->GetLargestPossibleRegion();
+      OutputImage->GetLargestPossibleRegion();
 
   //Setup Progress reporter
   ProgressReporter progress(this, 0, region.GetNumberOfPixels());
 
-  typedef itk::ImageRegionIteratorWithIndex<OutputImageType> OutputIteratorType;
-  typedef itk::ImageRegionConstIterator<MaskImageType> MaskIteratorType;
+  using OutputIteratorType = itk::ImageRegionIteratorWithIndex<OutputImageType>;
+  using MaskIteratorType = itk::ImageRegionConstIterator<MaskImageType>;
 
   OutputIteratorType itOutput(OutputImage, region);
   MaskIteratorType itMask(MaskImage, region);
@@ -352,9 +308,13 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
         point[i] = (itOutput.GetIndex()[i] * this->m_Spacing[i]) + this->m_Origin[i];
       }
       double val = 0.0;
-      InputObject->ValueAt(point, val, 99999);
+#if ITK_VERSION_MAJOR == 5
+      InputObject->ValueAtInObjectSpace(point, val, TInputSpatialObject::MaximumDepth);
+#else
+      InputObject->ValueAt(point, val, TInputSpatialObject::MaximumDepth);
+#endif
 
-      if ( this->m_InsideValue != 0 || this->m_OutsideValue != 0 )
+      if (this->m_InsideValue != 0 || this->m_OutsideValue != 0)
       {
         if (val)
         {
@@ -387,15 +347,12 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
     progress.CompletedPixel();
   }
 
-  itkDebugMacro( << "MaskedSpatialObjectToImageFilter::Update() finished");
+  itkDebugMacro(<< "MaskedSpatialObjectToImageFilter::Update() finished");
 
 } // end update function
 
-
-template<class TInputSpatialObject, class TOutputImage>
-void
-MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
-::PrintSelf(std::ostream &os, Indent indent) const
+template <class TInputSpatialObject, class TOutputImage>
+void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::PrintSelf(std::ostream &os, Indent indent) const
 {
   Superclass::PrintSelf(os, indent);
   os << indent << "Size : " << this->m_Size << std::endl;
@@ -420,7 +377,6 @@ MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>
     os << indent << "User Supplied Mask : NO" << std::endl;
   }
 }
-
 
 } // end namespace itk
 

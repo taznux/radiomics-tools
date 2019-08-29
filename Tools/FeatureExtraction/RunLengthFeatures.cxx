@@ -12,15 +12,14 @@
 #include <cmath>
 
 //definitions of used types
-typedef itk::Image<float, 3> InternalImageType;
-typedef itk::Neighborhood<float, 3> NeighborhoodType;
-typedef itk::Statistics::ScalarImageToRunLengthMatrixFilter<InternalImageType>
-    Image2runLengthType;
-typedef Image2runLengthType::HistogramType HistogramType;
-typedef itk::Statistics::HistogramToRunLengthFeaturesFilter<HistogramType> Hist2FeaturesType;
-typedef Image2runLengthType::HistogramType HistogramType;
-typedef InternalImageType::OffsetType OffsetType;
-typedef InternalImageType::SpacingType SpacingType;
+using InternalImageType = itk::Image<float, 3>;
+using NeighborhoodType = itk::Neighborhood<float, 3>;
+using Image2runLengthType = itk::Statistics::ScalarImageToRunLengthMatrixFilter<InternalImageType>;
+using HistogramType = Image2runLengthType::HistogramType;
+using Hist2FeaturesType = itk::Statistics::HistogramToRunLengthFeaturesFilter<HistogramType>;
+using HistogramType = Image2runLengthType::HistogramType;
+using OffsetType = InternalImageType::OffsetType;
+using SpacingType = InternalImageType::SpacingType;
 
 //calculate features for one offset
 float * calcTextureFeatureImage (OffsetType offset,
@@ -135,7 +134,7 @@ int main(int argc, char*argv[])
   std::string maskFileName = argv[5];
 
   // read image
-  typedef itk::ImageFileReader<InternalImageType> ReaderType;
+  using ReaderType = itk::ImageFileReader<InternalImageType>;
   ReaderType::Pointer reader=ReaderType::New();
   reader->SetFileName(fileName);
   reader->Update();
@@ -154,7 +153,7 @@ int main(int argc, char*argv[])
   
   OffsetType offset;
 
-  typedef itk::ImageFileWriter<InternalImageType> WriterType;
+  using WriterType = itk::ImageFileWriter<InternalImageType>;
   WriterType::Pointer writer=WriterType::New();
 
   for ( unsigned int d = 0; d < centerIndex; d++ )

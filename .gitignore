@@ -4,8 +4,7 @@ Documents
 References
 lib
 bin
-build
-super-build
+*build*
 dist
 DATA
 output*

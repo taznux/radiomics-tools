@@ -33,7 +33,6 @@
 
 #include "itkSpatialObjectToImageFilter.h"
 #include "itkEllipseSpatialObject.h"
-#include "itkCylinderSpatialObject.h"
 
 #include "itkSubtractImageFilter.h"
 #include "itkAddImageFilter.h"
@@ -50,57 +49,57 @@
 using namespace std;
 
 // Definition of Data type
-typedef signed short InputPixelType;
-typedef unsigned char OutputPixelType;
-typedef float InternalPixelType;
+using InputPixelType = signed short;
+using OutputPixelType = unsigned char;
+using InternalPixelType = float;
 
 
-typedef itk::Image<InputPixelType, 3> InImageType;
-typedef itk::Image<OutputPixelType, 3> OutImageType;
-typedef itk::Image<OutputPixelType, 2> OutImage2DType;
-typedef itk::Image<InternalPixelType, 3> WeightImageType;
+using InImageType = itk::Image<InputPixelType, 3>;
+using OutImageType = itk::Image<OutputPixelType, 3>;
+using OutImage2DType = itk::Image<OutputPixelType, 2>;
+using WeightImageType = itk::Image<InternalPixelType, 3>;
 
 
 // Definition of IO
-typedef itk::ImageFileReader<InImageType> InImageReaderType;
-typedef itk::ImageFileWriter<InImageType> InImageWriterType;
-typedef itk::ImageFileWriter<WeightImageType> WeightImageWriterType;
-typedef itk::ImageFileWriter<OutImageType> OutImageWriterType;
+using InImageReaderType = itk::ImageFileReader<InImageType>;
+using InImageWriterType = itk::ImageFileWriter<InImageType>;
+using WeightImageWriterType = itk::ImageFileWriter<WeightImageType>;
+using OutImageWriterType = itk::ImageFileWriter<OutImageType>;
 
-typedef itk::ImageDuplicator<OutImageType> DuplicatorType;
+using DuplicatorType = itk::ImageDuplicator<OutImageType>;
 
-typedef itk::RegionOfInterestImageFilter<InImageType, InImageType> RoiFilterType;
-
-
-typedef itk::BinaryBallStructuringElement<OutputPixelType, 3> StructuringElementType;
-typedef itk::BinaryBallStructuringElement<OutputPixelType, 2> StructuringElement2DType;
-typedef itk::BinaryDilateImageFilter<OutImageType, OutImageType, StructuringElementType> DilateFilterType;
-typedef itk::BinaryErodeImageFilter<OutImageType, OutImageType, StructuringElementType> ErodeFilterType;
-
-typedef itk::BinaryClosingByReconstructionImageFilter<OutImage2DType, StructuringElement2DType> ClosingFilter2DType;
-typedef itk::BinaryOpeningByReconstructionImageFilter<OutImage2DType, StructuringElement2DType> OpeningFilter2DType;
+using RoiFilterType = itk::RegionOfInterestImageFilter<InImageType, InImageType>;
 
 
-typedef itk::SliceBySliceImageFilter<OutImageType, OutImageType> SliceBySliceFilterType;
-typedef itk::BinaryFillholeImageFilter<OutImage2DType> FillholeFilter2DType;
+using StructuringElementType = itk::BinaryBallStructuringElement<OutputPixelType, 3>;
+using StructuringElement2DType = itk::BinaryBallStructuringElement<OutputPixelType, 2>;
+using DilateFilterType = itk::BinaryDilateImageFilter<OutImageType, OutImageType, StructuringElementType>;
+using ErodeFilterType = itk::BinaryErodeImageFilter<OutImageType, OutImageType, StructuringElementType>;
 
-typedef itk::AreaOpeningImageFilter<OutImageType, OutImageType> AreaOpeningImageFilterType;
-typedef itk::ConnectedComponentImageFilter<OutImageType, OutImageType> ConnectedComponentImageFilterType;
-
-typedef itk::CurvatureAnisotropicDiffusionImageFilter<WeightImageType, WeightImageType> DiffusionFilterType;
-typedef itk::IsotropicResamplerImageFilter<InImageType, WeightImageType> IsotropicResamplerType;
-typedef itk::SatoVesselnessSigmoidFeatureGenerator<3> VesselnessGeneratorType;
-typedef VesselnessGeneratorType::SpatialObjectType SpatialObjectType;
-typedef VesselnessGeneratorType::InputImageSpatialObjectType InputImageSpatialObjectType;
-typedef itk::ImageSpatialObject<VesselnessGeneratorType::Dimension, InternalPixelType>  OutputImageSpatialObjectType;
+using ClosingFilter2DType = itk::BinaryClosingByReconstructionImageFilter<OutImage2DType, StructuringElement2DType>;
+using OpeningFilter2DType = itk::BinaryOpeningByReconstructionImageFilter<OutImage2DType, StructuringElement2DType>;
 
 
-typedef itk::BinaryThresholdImageFilter<WeightImageType, OutImageType>  ThresholdFilterType;
-typedef itk::ConnectedComponentImageFilter<OutImageType, OutImageType> ConnectedComponentImageFilterType;
+using SliceBySliceFilterType = itk::SliceBySliceImageFilter<OutImageType, OutImageType>;
+using FillholeFilter2DType = itk::BinaryFillholeImageFilter<OutImage2DType>;
 
-typedef itk::GrowCutSegmentationImageFilter<WeightImageType, OutImageType> GrowCutFilterType;
+using AreaOpeningImageFilterType = itk::AreaOpeningImageFilter<OutImageType, OutImageType>;
+using ConnectedComponentImageFilterType = itk::ConnectedComponentImageFilter<OutImageType, OutImageType>;
 
-typedef itk::SubtractImageFilter<OutImageType, OutImageType, OutImageType> SubFilterType;
+using DiffusionFilterType = itk::CurvatureAnisotropicDiffusionImageFilter<WeightImageType, WeightImageType>;
+using IsotropicResamplerType = itk::IsotropicResamplerImageFilter<InImageType, WeightImageType>;
+using VesselnessGeneratorType = itk::SatoVesselnessSigmoidFeatureGenerator<3>;
+using SpatialObjectType = VesselnessGeneratorType::SpatialObjectType;
+using InputImageSpatialObjectType = VesselnessGeneratorType::InputImageSpatialObjectType;
+using OutputImageSpatialObjectType = itk::ImageSpatialObject<VesselnessGeneratorType::Dimension, InternalPixelType>;
+
+
+using ThresholdFilterType = itk::BinaryThresholdImageFilter<WeightImageType, OutImageType>;
+using ConnectedComponentImageFilterType = itk::ConnectedComponentImageFilter<OutImageType, OutImageType>;
+
+using GrowCutFilterType = itk::GrowCutSegmentationImageFilter<WeightImageType, OutImageType>;
+
+using SubFilterType = itk::SubtractImageFilter<OutImageType, OutImageType, OutImageType>;
 
 // To print the progress
 class ShowProgressObject
@@ -276,7 +275,7 @@ main(int argc, char * argv[])
 
         inImageIso = isotropicResampler->GetOutput();
     } else {
-        typedef itk::CastImageFilter<InImageType, WeightImageType> CastImageFilterType;
+        using CastImageFilterType = itk::CastImageFilter<InImageType, WeightImageType>;
         CastImageFilterType::Pointer castImageFilter = CastImageFilterType::New();
         castImageFilter->SetInput(inImage);
         castImageFilter->Update();
@@ -924,7 +923,7 @@ main(int argc, char * argv[])
         VesselnessGeneratorType::Pointer vesselnessFeatureGenerator = VesselnessGeneratorType::New();
         InputImageSpatialObjectType::Pointer inputSpatialObject     = InputImageSpatialObjectType::New();
 
-        typedef itk::CastImageFilter<WeightImageType, InImageType> CastImageFilterType;
+        using CastImageFilterType = itk::CastImageFilter<WeightImageType, InImageType>;
         CastImageFilterType::Pointer castImageFilter = CastImageFilterType::New();
         castImageFilter->SetInput(inImageIso);
 

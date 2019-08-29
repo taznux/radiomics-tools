@@ -1,11 +1,11 @@
 #ifndef FAST_MARCHING_H
 #define FAST_MARCHING_H
 
-#include <math.h>
+#include <cmath>
 #include <queue>
 #include <set>
 #include <vector>
-#include <stdlib.h>
+#include <cstdlib>
 #include <fstream>
 #include <iterator>
 
@@ -55,7 +55,7 @@ public:
 const float  DIST_INF = std::numeric_limits<float>::max();
 const float  DIST_EPSION = 1e-3;
 unsigned char NNGBH = 26;
-typedef float FPixelType;
+using FPixelType = float;
 
 template<typename SrcPixelType, typename LabPixelType>
 class FastGrowCut

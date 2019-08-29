@@ -71,11 +71,11 @@ int main( int argc, char *argv[] )
         return EXIT_FAILURE;
     }
 
-    typedef signed short    PixelType;
-    typedef itk::Image< PixelType, 3 >         ImageType;
-    typedef itk::Image< PixelType, 2 >         DICOMImageType;
+    using PixelType = signed short;
+    using ImageType = itk::Image< PixelType, 3 >;
+    using DICOMImageType = itk::Image< PixelType, 2 >;
 
-    typedef itk::GDCMSeriesFileNames NamesGeneratorType;
+    using NamesGeneratorType = itk::GDCMSeriesFileNames;
     NamesGeneratorType::Pointer nameGenerator = NamesGeneratorType::New();
     nameGenerator->SetUseSeriesDetails( true );
     nameGenerator->AddSeriesRestriction("0008|0021" );
@@ -90,7 +90,7 @@ int main( int argc, char *argv[] )
         std::cout << std::endl << std::endl;
 
 
-        typedef std::vector< std::string >    SeriesIdContainer;
+        using SeriesIdContainer = std::vector< std::string >;
         const SeriesIdContainer &seriesUID = nameGenerator->GetSeriesUIDs();
         SeriesIdContainer::const_iterator seriesItr = seriesUID.begin();
         SeriesIdContainer::const_iterator seriesEnd = seriesUID.end();
@@ -103,7 +103,7 @@ int main( int argc, char *argv[] )
 
         std::string studyDescriptionOld;
 
-        for ( seriesItr = seriesUID.begin(); seriesItr != seriesEnd ; seriesItr++)
+        for ( seriesItr = seriesUID.begin(); seriesItr != seriesEnd; seriesItr++)
         {
             std::string seriesIdentifier;
             seriesIdentifier = seriesItr->c_str();
@@ -113,14 +113,14 @@ int main( int argc, char *argv[] )
             std::cout << seriesIdentifier << std::endl;
             std::cout << std::endl << std::endl;
 
-            typedef itk::ImageSeriesReader< ImageType >        ReaderType;
+            using ReaderType = itk::ImageSeriesReader< ImageType >;
             ReaderType::Pointer reader = ReaderType::New();
 
-            typedef itk::GDCMImageIO       ImageIOType;
+            using ImageIOType = itk::GDCMImageIO;
             ImageIOType::Pointer dicomIO = ImageIOType::New();
             reader->SetImageIO( dicomIO );
 
-            typedef std::vector< std::string >   FileNamesContainer;
+            using FileNamesContainer = std::vector< std::string >;
             FileNamesContainer fileNames;
             fileNames = nameGenerator->GetFileNames( seriesIdentifier );
 
@@ -181,7 +181,7 @@ int main( int argc, char *argv[] )
             dicomIO->GetValueFromTag("0028|1052", rescaleIntercept);
             std::cout << rescaleIntercept << std::endl;
 
-            typedef itk::AddImageFilter <ImageType, ImageType, ImageType> AddImageFilterType;
+            using AddImageFilterType = itk::AddImageFilter <ImageType, ImageType, ImageType>;
             AddImageFilterType::Pointer addImageFilter = AddImageFilterType::New();
             if(rescaleIntercept.length() == 0)
             {
@@ -255,7 +255,7 @@ int main( int argc, char *argv[] )
 
 
             ////////To write Output images /////////////////////
-/*            typedef itk::ImageSeriesWriter< ImageType, DICOMImageType > WriterType;
+/*            using WriterType = itk::ImageSeriesWriter< ImageType, DICOMImageType >;
 
             nameGenerator->SetOutputDirectory( seriesDirectory );
             FileNamesContainer OutputImageNames;
@@ -270,7 +270,7 @@ int main( int argc, char *argv[] )
             std::cout  << "Writing the image as " << std::endl << std::endl;
             std::cout  << seriesDirectory << std::endl << std::endl;*/
 
-            typedef itk::ImageFileWriter< ImageType> SingleOutImageWriterType;
+            using SingleOutImageWriterType = itk::ImageFileWriter< ImageType>;
             SingleOutImageWriterType::Pointer OutWriter = SingleOutImageWriterType::New();
             OutWriter->SetUseCompression(true);
             OutWriter->SetInput(inputImage);
