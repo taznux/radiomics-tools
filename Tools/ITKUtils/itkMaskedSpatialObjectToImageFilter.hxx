@@ -138,13 +138,20 @@ void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::SetupO
   // Generate the image
   SizeType size;
 
-  InputObject->ComputeFamilyBoundingBox( this->m_ChildrenDepth );
-  for ( i = 0; i < this->ObjectDimension; i++ )
-    {
+#if ITK_VERSION_MAJOR == 5
+  InputObject->ComputeFamilyBoundingBox(this->m_ChildrenDepth);
+  for (i = 0; i < this->ObjectDimension; i++)
+  {
     size[i] = static_cast<SizeValueType>(
-      InputObject->GetFamilyBoundingBoxInWorldSpace()->GetMaximum()[i]
-      - InputObject->GetFamilyBoundingBoxInWorldSpace()->GetMinimum()[i] );
-    }
+        InputObject->GetFamilyBoundingBoxInWorldSpace()->GetMaximum()[i] - InputObject->GetFamilyBoundingBoxInWorldSpace()->GetMinimum()[i]);
+  }
+#else
+  InputObject->ComputeBoundingBox();
+  for (unsigned int i = 0; i < itkGetStaticConstMacro(ObjectDimension); i++)
+  {
+    size[i] = (long unsigned int)(InputObject->GetBoundingBox()->GetMaximum()[i] - InputObject->GetBoundingBox()->GetMinimum()[i]);
+  }
+#endif
 
   typename OutputImageType::IndexType index;
   index.Fill(0);
@@ -156,32 +163,32 @@ void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::SetupO
   // object's bounding box will be used as default.
 
   bool specified = false;
-  for ( i = 0; i < this->OutputImageDimension; i++ )
+  for (i = 0; i < this->OutputImageDimension; i++)
+  {
+    if (this->m_Size[i] != 0)
     {
-    if ( this->m_Size[i] != 0 )
-      {
       specified = true;
       break;
-      }
     }
+  }
 
-  if ( specified )
-    {
+  if (specified)
+  {
     region.SetSize(this->m_Size);
-    }
+  }
   else
-    {
+  {
     region.SetSize(size);
-    }
+  }
   region.SetIndex(index);
 
-  OutputImage->SetLargestPossibleRegion(region);      //
-  OutputImage->SetBufferedRegion(region);             // set the region
-  OutputImage->SetRequestedRegion(region);            //
-  OutputImage->SetSpacing(this->m_Spacing);         // set spacing
-  OutputImage->SetOrigin(this->m_Origin);     //   and origin
+  OutputImage->SetLargestPossibleRegion(region); //
+  OutputImage->SetBufferedRegion(region);        // set the region
+  OutputImage->SetRequestedRegion(region);       //
+  OutputImage->SetSpacing(this->m_Spacing);      // set spacing
+  OutputImage->SetOrigin(this->m_Origin);        //   and origin
   OutputImage->SetDirection(this->m_Direction);
-  OutputImage->Allocate();   // allocate the image
+  OutputImage->Allocate(); // allocate the image
 }
 
 /** Generate Mask */
@@ -301,7 +308,11 @@ void MaskedSpatialObjectToImageFilter<TInputSpatialObject, TOutputImage>::Genera
         point[i] = (itOutput.GetIndex()[i] * this->m_Spacing[i]) + this->m_Origin[i];
       }
       double val = 0.0;
+#if ITK_VERSION_MAJOR == 5
       InputObject->ValueAtInObjectSpace(point, val, TInputSpatialObject::MaximumDepth);
+#else
+      InputObject->ValueAt(point, val, TInputSpatialObject::MaximumDepth);
+#endif
 
       if (this->m_InsideValue != 0 || this->m_OutsideValue != 0)
       {

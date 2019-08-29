@@ -144,8 +144,7 @@ void reset2DImage(ImageSliceType::Pointer imageSlice)
   }
 }
 
-#if 1
-void mergeImages(ImageSliceType::Pointer& tempSlice, ImageType::Pointer& finalImage, int iRequiredSlice)
+void mergeImages(ImageSliceType::Pointer &tempSlice, ImageType::Pointer &finalImage, int iRequiredSlice)
 {
   PixelType pixelValue = 0;
 
@@ -177,35 +176,6 @@ void mergeImages(ImageSliceType::Pointer& tempSlice, ImageType::Pointer& finalIm
     }
   }
 }
-#else
-void mergeImages(ImageSliceType::Pointer tempSlice, ImageType::Pointer finalImage, int iRequiredSlice)
-{
-  PixelType pixelValue = 0;
-  ImageType::IndexType pixelIndex;
-  ImageSliceType::IndexType sliceIndex;
-  int iX = finalImage->GetLargestPossibleRegion().GetSize()[0];
-  int iY = finalImage->GetLargestPossibleRegion().GetSize()[1];
-
-  if (iRequiredSlice > 0)
-  {
-    for (int i = 0; i < iX; i++)
-      for (int j = 0; j < iY; j++)
-      {
-        pixelIndex[0] = i;
-        pixelIndex[1] = j;
-        sliceIndex[0] = i;
-        sliceIndex[1] = j;
-
-        pixelValue = tempSlice->GetPixel(sliceIndex);
-        pixelIndex[2] = iRequiredSlice;
-
-        //Disable hole filling (if required please uncomment the next line (and comment the following line)).
-        //if (pixelValue != 0)  finalImage->SetPixel(pixelIndex, pixelValue  );
-        finalImage->SetPixel(pixelIndex, finalImage->GetPixel(pixelIndex) ^ (pixelValue != 0));
-      }
-  }
-}
-#endif
 
 //remove empty spaces from contour names
 void trim(std::string &str)
@@ -222,14 +192,13 @@ namespace gdcm
 class Reader;
 }
 
-void insertRegion(PolygonType::Pointer polygon, ImageSliceType::Pointer temp2Dimage, ImageType::Pointer finalImage, int iSlice)
-{ 
-  std::cout << "Inserting region with " << polygon->GetNumberOfPoints() << " points into slice: " << iSlice << std::endl;
+void insertRegion(PolygonType::Pointer polygon, ImageSliceType::Pointer &temp2Dimage)
+{
   reset2DImage(temp2Dimage);
   SpatialObjectToImageFilterType::Pointer imageFilter = SpatialObjectToImageFilterType::New();
 
   //need to create a 2D slice here, put the polygon on it, and insert it back into the 3D volume...
-   try
+  try
   {
     imageFilter->SetInput(polygon);
     imageFilter->SetSize(temp2Dimage->GetLargestPossibleRegion().GetSize());
@@ -244,9 +213,6 @@ void insertRegion(PolygonType::Pointer polygon, ImageSliceType::Pointer temp2Dim
     std::cerr << "Problem setting polygon->SetPoints for this region (non-planar)" << std::endl;
     std::cerr << err << std::endl;
   }
-
-  //merge new polygon from temp image into the contour image
-  mergeImages(temp2Dimage, finalImage, iSlice);
 }
 
 int main(int argc, char *argv[])
@@ -518,7 +484,6 @@ int main(int argc, char *argv[])
     for (unsigned int i = 0; i < nitems; ++i)
     {
       PolygonType::Pointer polygon;
-      PolygonType::PolygonPointListType pointList;
       polygon = PolygonType::New();
 
       const gdcm::Item &item2 = sqi2->GetItem(i + 1); // Item start at #1
@@ -551,15 +516,21 @@ int main(int argc, char *argv[])
         p.SetRed(1);
         p.SetBlue(1);
         p.SetGreen(1);
-        p.SetPositionInObjectSpace(pixelIndex[0], pixelIndex[1]); //, pixelIndex[2]);
+#if ITK_VERSION_MAJOR == 5
+        p.SetPositionInObjectSpace(pixelIndex[0], pixelIndex[1]);
+#else
+        p.SetPosition(pixelIndex[0], pixelIndex[1], pixelIndex[2]);
+#endif
         polygon->GetPoints().push_back(p);
       }
       polygon->Update();
+      iCurrentSlice = pixelIndex[2];
 
       // we have the points for a contour in a single slice.  We need to join these up and insert into the slice as polygon.
-      iCurrentSlice = pixelIndex[2];
-      
-      insertRegion(polygon, temp2Dimage, image, iCurrentSlice);
+      std::cout << "Inserting region with " << polygon->GetNumberOfPoints() << " points into slice: " << iCurrentSlice << std::endl;
+      insertRegion(polygon, temp2Dimage);
+      //merge new polygon from temp image into the contour image
+      mergeImages(temp2Dimage, image, iCurrentSlice);
     }
 
     if (iPointsOutsideBoundary > 0)
