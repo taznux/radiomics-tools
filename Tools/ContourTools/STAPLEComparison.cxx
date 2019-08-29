@@ -200,7 +200,6 @@ int main(int argc, char *argv[])
 
         inputMaskImages[i] = pasteFilter->GetOutput();
 
-
         // To check coordinate of the label image
         auto newMaskOrigin = inputMaskImages[i]->GetOrigin();
         auto newMaskRegion = inputMaskImages[i]->GetBufferedRegion();

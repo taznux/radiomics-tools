@@ -33,7 +33,6 @@
 
 #include "itkSpatialObjectToImageFilter.h"
 #include "itkEllipseSpatialObject.h"
-#include "itkCylinderSpatialObject.h"
 
 #include "itkSubtractImageFilter.h"
 #include "itkAddImageFilter.h"
