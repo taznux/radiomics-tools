@@ -47,7 +47,7 @@ cd ${PROJECT_DIR}/externals/TCIAExplorer
 cd -
 
 if ! test -e ${VTK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $VTK_SOURCE_DIR; fi
-if ! test -d ${VTK_SOURCE_DIR}; then git clone --branch ${VTK_VERSION} git://vtk.org/VTK.git ${VTK_SOURCE_DIR}; fi
+if ! test -d ${VTK_SOURCE_DIR}; then git clone --branch ${VTK_VERSION} https://gitlab.kitware.com/vtk/vtk.git ${VTK_SOURCE_DIR}; fi
 if ! test -d ${VTK_BUILD_DIR}; then mkdir ${VTK_BUILD_DIR}; fi
 cd ${VTK_BUILD_DIR}
 cmake ${VTK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF 
@@ -55,7 +55,7 @@ make --jobs=${NUM_THREADS} --keep-going
 cd -
 
 if ! test -e ${ITK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $ITK_SOURCE_DIR; fi
-if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} git://itk.org/ITK.git ${ITK_SOURCE_DIR}; fi
+if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} https://github.com/InsightSoftwareConsortium/ITK.git ${ITK_SOURCE_DIR}; fi
 if ! test -d ${ITK_BUILD_DIR}; then mkdir ${ITK_BUILD_DIR}; fi
 cd ${ITK_BUILD_DIR}
 cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DModule_ITKReview=ON -DModule_LesionSizingToolkit=ON
