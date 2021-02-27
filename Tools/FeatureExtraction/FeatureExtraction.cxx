@@ -524,10 +524,11 @@ CalcGlcmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer mas
 
     using TextureFeaturesFilterType = TextureFilterType::TextureFeaturesFilterType;
 
-    using TextureFeatureEnums = itk::Statistics::HistogramToTextureFeaturesFilterEnums::TextureFeature;
     TextureFilterType::FeatureNameVectorPointer requestedFeatures =
       TextureFilterType::FeatureNameVector::New();
 
+#if ((ITK_VERSION_MAJOR == 5) && (ITK_VERSION_MINOR >= 1))
+    using TextureFeatureEnums = itk::Statistics::HistogramToTextureFeaturesFilterEnums::TextureFeature;
     requestedFeatures->push_back(static_cast<uint8_t>(TextureFeatureEnums::Energy));
     requestedFeatures->push_back(static_cast<uint8_t>(TextureFeatureEnums::Entropy));
     requestedFeatures->push_back(static_cast<uint8_t>(TextureFeatureEnums::Correlation));
@@ -536,6 +537,16 @@ CalcGlcmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer mas
     requestedFeatures->push_back(static_cast<uint8_t>(TextureFeatureEnums::ClusterShade));
     requestedFeatures->push_back(static_cast<uint8_t>(TextureFeatureEnums::ClusterProminence));
     requestedFeatures->push_back(static_cast<uint8_t>(TextureFeatureEnums::HaralickCorrelation));
+#else
+    requestedFeatures->push_back(TextureFeaturesFilterType::Energy);
+    requestedFeatures->push_back(TextureFeaturesFilterType::Entropy);
+    requestedFeatures->push_back(TextureFeaturesFilterType::Correlation);
+    requestedFeatures->push_back(TextureFeaturesFilterType::InverseDifferenceMoment);
+    requestedFeatures->push_back(TextureFeaturesFilterType::Inertia);
+    requestedFeatures->push_back(TextureFeaturesFilterType::ClusterShade);
+    requestedFeatures->push_back(TextureFeaturesFilterType::ClusterProminence);
+    requestedFeatures->push_back(TextureFeaturesFilterType::HaralickCorrelation);
+#endif
 
     glcm->SetRequestedFeatures(requestedFeatures);
     // glcm->SetNormalizeOn();
@@ -608,10 +619,10 @@ CalcGlrmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer mas
 
     using RunLengthFeaturesFilterType = RunLengthFilterType::RunLengthFeaturesFilterType;
 
-    using RunLengthFeatureEnums = itk::Statistics::HistogramToRunLengthFeaturesFilterEnums::RunLengthFeature;
     RunLengthFilterType::FeatureNameVectorPointer requestedFeatures =
       RunLengthFilterType::FeatureNameVector::New();
-
+#if ((ITK_VERSION_MAJOR == 5) && (ITK_VERSION_MINOR >= 1))
+    using RunLengthFeatureEnums = itk::Statistics::HistogramToRunLengthFeaturesFilterEnums::RunLengthFeature;
     requestedFeatures->push_back(static_cast<uint8_t>(RunLengthFeatureEnums::ShortRunEmphasis));
     requestedFeatures->push_back(static_cast<uint8_t>(RunLengthFeatureEnums::LongRunEmphasis));
     requestedFeatures->push_back(static_cast<uint8_t>(RunLengthFeatureEnums::GreyLevelNonuniformity));
@@ -622,7 +633,18 @@ CalcGlrmFeatures(InputImageType::Pointer inputImage, InputImageType::Pointer mas
     requestedFeatures->push_back(static_cast<uint8_t>(RunLengthFeatureEnums::ShortRunHighGreyLevelEmphasis));
     requestedFeatures->push_back(static_cast<uint8_t>(RunLengthFeatureEnums::LongRunLowGreyLevelEmphasis));
     requestedFeatures->push_back(static_cast<uint8_t>(RunLengthFeatureEnums::LongRunHighGreyLevelEmphasis));
-
+#else
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::ShortRunEmphasis);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::LongRunEmphasis);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::GreyLevelNonuniformity);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::RunLengthNonuniformity);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::LowGreyLevelRunEmphasis);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::HighGreyLevelRunEmphasis);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::ShortRunLowGreyLevelEmphasis);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::ShortRunHighGreyLevelEmphasis);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::LongRunLowGreyLevelEmphasis);
+    requestedFeatures->push_back(RunLengthFeaturesFilterType::LongRunHighGreyLevelEmphasis);
+#endif
     glrm->SetRequestedFeatures(requestedFeatures);
 
 
