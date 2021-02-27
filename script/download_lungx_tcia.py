@@ -7,9 +7,7 @@ from zipfile import ZipFile
 
 dicom_path = 'DATA/DOI'
 
-api_key = os.getenv("TCIA_API_KEY")
-
-tcia = TciaExplorer(api_key=api_key) #set api_key
+tcia = TciaExplorer()
 
 patients = ["CT-Training-LC001", "CT-Training-LC002", "CT-Training-LC003"]
 #patients = ["CT-Training-LC001", "CT-Training-LC002", "CT-Training-LC003",
