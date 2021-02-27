@@ -13,7 +13,7 @@ addons:
 matrix:
   include:
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode12.2
     compiler: clang
     env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.6
   - os: linux
@@ -21,7 +21,7 @@ matrix:
     compiler: gcc
     env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.6
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode12.2
     compiler: clang
     env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.6
   - os: linux
@@ -29,7 +29,7 @@ matrix:
     compiler: gcc
     env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.6
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode12.2
     compiler: clang
     env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.7
   - os: linux
@@ -37,7 +37,7 @@ matrix:
     compiler: gcc
     env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.7
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode12.2
     compiler: clang
     env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.7
   - os: linux
