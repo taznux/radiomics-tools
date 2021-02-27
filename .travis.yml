@@ -15,35 +15,35 @@ matrix:
   - os: osx
     osx_image: xcode11
     compiler: clang
-    env: ITK_VERSION=v4.13.2 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.6
   - os: linux
     dist: bionic
     compiler: gcc
-    env: ITK_VERSION=v4.13.2 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.6
   - os: osx
     osx_image: xcode11
     compiler: clang
-    env: ITK_VERSION=v5.0.1 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.6
   - os: linux
     dist: bionic
     compiler: gcc
-    env: ITK_VERSION=v5.0.1 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.6
   - os: osx
     osx_image: xcode11
     compiler: clang
-    env: ITK_VERSION=v4.13.2 TRAVIS_PYTHON_VERSION=3.7
+    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.7
   - os: linux
     dist: bionic
     compiler: gcc
-    env: ITK_VERSION=v4.13.2 TRAVIS_PYTHON_VERSION=3.7
+    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.7
   - os: osx
     osx_image: xcode11
     compiler: clang
-    env: ITK_VERSION=v5.0.1 TRAVIS_PYTHON_VERSION=3.7
+    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.7
   - os: linux
     dist: bionic
     compiler: gcc
-    env: ITK_VERSION=v5.0.1 TRAVIS_PYTHON_VERSION=3.7
+    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.7
 cache:
 - directories:
   - $HOME/itk-${ITK_VERSION}
@@ -54,6 +54,8 @@ before_script:
 - export NUM_THREADS=4
 - export ITK_SOURCE_DIR=$HOME/itk-${ITK_VERSION}
 - export ITK_BUILD_DIR=${ITK_SOURCE_DIR}-build
+- export MINICONDA_MAC=https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+- export MINICONDA_LINUX=https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
 - if ! test -e ${ITK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $ITK_SOURCE_DIR; fi
 - if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} https://github.com/InsightSoftwareConsortium/ITK.git ${ITK_SOURCE_DIR}; fi
 - if ! test -d ${ITK_BUILD_DIR}; then mkdir ${ITK_BUILD_DIR}; fi
@@ -61,7 +63,7 @@ before_script:
 - cmake ${ITK_SOURCE_DIR} -DCMAKE_BUILD_TYPE=Release -DBUILD_EXAMPLES=OFF -DBUILD_TESTING=OFF -DModule_ITKReview=ON -DModule_LesionSizingToolkit=ON
 - make --jobs=$NUM_THREADS --keep-going
 - cd -
-- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl "https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh" -o miniconda_install.sh; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl "https://repo.continuum.io/miniconda/Miniconda3-latest-MacOSX-x86_64.sh" -o miniconda_Install.sh; fi
+- if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl $MINICONDA_LINUX -o miniconda_install.sh; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl $MINICONDA_MAC -o miniconda_Install.sh; fi
 - bash miniconda_install.sh -b -f -p "$HOME/miniconda/"
 - export PATH="$HOME/miniconda/bin:$PATH"
 - hash -r
