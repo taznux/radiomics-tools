@@ -789,7 +789,7 @@ ExtractLargestAreaSlice(InputImageType::Pointer inputImage, MaskImageType::Point
 
     using FilterType = itk::ExtractImageFilter<MaskImageType, MaskImage2DType>;
     FilterType::Pointer filter = FilterType::New();
-    filter->SetDirectionCollapseToSubmatrix();
+    filter->SetDirectionCollapseToGuess();
 
     float maxArea         = 0;
     unsigned int maxSlice = 0;
@@ -846,7 +846,7 @@ ExtractLargestAreaSlice(InputImageType::Pointer inputImage, MaskImageType::Point
         using FilterType = itk::ExtractImageFilter<InputImageType, InputImage2DType>;
         FilterType::Pointer filter = FilterType::New();
         // filter->InPlaceOn();
-        filter->SetDirectionCollapseToSubmatrix();
+        filter->SetDirectionCollapseToGuess();
 
         cout << start << size << endl;
 
