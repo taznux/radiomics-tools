@@ -1,6 +1,6 @@
 [submodule "externals/CMake-codecov"]
 	path = externals/CMake-codecov
-	url = git://github.com/RWTH-ELP/CMake-codecov.git
+	url = https://github.com/RWTH-HPC/CMake-codecov.git
 [submodule "externals/TCIAExplorer"]
 	path = externals/TCIAExplorer
-	url = git://github.com/taznux/TCIAExplorer.git
+	url = https://github.com/taznux/TCIAExplorer.git

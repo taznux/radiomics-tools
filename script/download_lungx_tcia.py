@@ -7,9 +7,7 @@ from zipfile import ZipFile
 
 dicom_path = 'DATA/DOI'
 
-api_key = os.getenv("TCIA_API_KEY")
-
-tcia = TciaExplorer(api_key=api_key) #set api_key
+tcia = TciaExplorer()
 
 patients = ["CT-Training-LC001", "CT-Training-LC002", "CT-Training-LC003"]
 #patients = ["CT-Training-LC001", "CT-Training-LC002", "CT-Training-LC003",
@@ -21,7 +19,8 @@ for patient in patients:
     ###################Fetch study###############
     print(patient)
     try:
-        patientStudy  = json.loads(tcia.get_patient_study(patientID=patient).text)
+        patientStudy  = json.loads(tcia.get_patient_study(collection="SPIE-AAPM Lung CT Challenge", patientID=patient).text)
+        print(patientStudy)
     except requests.exceptions.RequestException as e:
         print(e)
         sys.exit(1)

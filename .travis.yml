@@ -13,49 +13,50 @@ addons:
 matrix:
   include:
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode13.2
     compiler: clang
-    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.9
   - os: linux
-    dist: bionic
+    dist: focal
     compiler: gcc
-    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.9
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode13.2
     compiler: clang
-    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v5.2.1 TRAVIS_PYTHON_VERSION=3.9
   - os: linux
-    dist: bionic
+    dist: focal
     compiler: gcc
-    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.6
+    env: ITK_VERSION=v5.2.1 TRAVIS_PYTHON_VERSION=3.9
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode13.2
     compiler: clang
     env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.7
   - os: linux
-    dist: bionic
+    dist: focal
     compiler: gcc
     env: ITK_VERSION=v4.13.3 TRAVIS_PYTHON_VERSION=3.7
   - os: osx
-    osx_image: xcode11
+    osx_image: xcode13.2
     compiler: clang
-    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.7
+    env: ITK_VERSION=v5.2.1 TRAVIS_PYTHON_VERSION=3.7
   - os: linux
-    dist: bionic
+    dist: focal
     compiler: gcc
-    env: ITK_VERSION=v5.1.2 TRAVIS_PYTHON_VERSION=3.7
+    env: ITK_VERSION=v5.2.1 TRAVIS_PYTHON_VERSION=3.7
 cache:
 - directories:
   - $HOME/itk-${ITK_VERSION}
   - $HOME/itk-${ITK_VERSION}-build
 before_install:
-- if test $TRAVIS_OS_NAME == osx ; then brew update && brew install vtk python3 lcov || brew upgrade libpng; fi
+- if test $TRAVIS_OS_NAME == osx ; then brew update && brew install qt5 vtk lcov || brew upgrade libpng; fi
 before_script:
 - export NUM_THREADS=4
 - export ITK_SOURCE_DIR=$HOME/itk-${ITK_VERSION}
 - export ITK_BUILD_DIR=${ITK_SOURCE_DIR}-build
 - export MINICONDA_MAC=https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
 - export MINICONDA_LINUX=https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+- export CONDA_DIR=$HOME/miniconda/
 - if ! test -e ${ITK_SOURCE_DIR}/CMakeLists.txt; then rm -fr $ITK_SOURCE_DIR; fi
 - if ! test -d ${ITK_SOURCE_DIR}; then git clone --branch ${ITK_VERSION} https://github.com/InsightSoftwareConsortium/ITK.git ${ITK_SOURCE_DIR}; fi
 - if ! test -d ${ITK_BUILD_DIR}; then mkdir ${ITK_BUILD_DIR}; fi
@@ -64,16 +65,16 @@ before_script:
 - make --jobs=$NUM_THREADS --keep-going
 - cd -
 - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then curl $MINICONDA_LINUX -o miniconda_install.sh; elif [[ "$TRAVIS_OS_NAME" == "osx" ]]; then curl $MINICONDA_MAC -o miniconda_Install.sh; fi
-- bash miniconda_install.sh -b -f -p "$HOME/miniconda/"
-- export PATH="$HOME/miniconda/bin:$PATH"
-- hash -r
+- bash miniconda_install.sh -b -f -p "${CONDA_DIR}"
+- export PATH="${CONDA_DIR}/bin:${PATH}"
+- source ${CONDA_DIR}/bin/activate
 - conda config --set always_yes yes --set changeps1 no
-- conda update -q conda
-# Useful for debugging any issues with conda
-- conda info -a
-- conda install --yes python=$TRAVIS_PYTHON_VERSION pandas scipy numpy ipython matplotlib
-- conda install --yes -c bioconda ruffus
-- conda install --yes -c SimpleITK SimpleITK
+- conda install --yes --freeze-installed nomkl 
+- conda install --yes --freeze-installed pandas scipy numpy ipython matplotlib
+- conda install --yes --freeze-installed -c conda-forge pydicom pynetdicom 
+- conda install --yes --freeze-installed -c bioconda ruffus
+- conda install --yes --freeze-installed -c SimpleITK SimpleITK 
+- conda clean -afy find ${CONDA_DIR} -follow -type f -name '*.a' -delete && find ${CONDA_DIR} -follow -type f -name '*.pyc' -delete && find ${CONDA_DIR} -follow -type f -name '*.js.map' -delete 
 - python3 -m pip install codecov
 - cd externals/TCIAExplorer
 - python3 setup.py install
