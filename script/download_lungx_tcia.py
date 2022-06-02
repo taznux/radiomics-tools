@@ -19,7 +19,8 @@ for patient in patients:
     ###################Fetch study###############
     print(patient)
     try:
-        patientStudy  = json.loads(tcia.get_patient_study(patientID=patient).text)
+        patientStudy  = json.loads(tcia.get_patient_study(collection="SPIE-AAPM Lung CT Challenge", patientID=patient).text)
+        print(patientStudy)
     except requests.exceptions.RequestException as e:
         print(e)
         sys.exit(1)
