@@ -1,6 +1,6 @@
 Radiomics tools
 ===================
-[![Build Status](https://travis-ci.org/taznux/radiomics-tools.svg?branch=master)](https://travis-ci.org/taznux/radiomics-tools) [![codecov](https://codecov.io/gh/taznux/radiomics-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/taznux/radiomics-tools)
+**Note: Here is a full system for lung cancer screening radiomics. https://github.com/taznux/LungCancerScreeningRadiomics**
 
 Image processing tools and ruffus based pipeline for radiomics feature analysis
 
