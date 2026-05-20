@@ -177,7 +177,7 @@ void mergeImages(ImageSliceType::Pointer &tempSlice, ImageType::Pointer &finalIm
   }
 }
 
-//remove empty spaces from contour names
+// remove empty spaces from contour names
 void trim(std::string &str)
 {
   std::string temp;
@@ -189,7 +189,7 @@ void trim(std::string &str)
 
 namespace gdcm
 {
-class Reader;
+  class Reader;
 }
 
 void insertRegion(PolygonType::Pointer polygon, ImageSliceType::Pointer &temp2Dimage)
@@ -197,12 +197,13 @@ void insertRegion(PolygonType::Pointer polygon, ImageSliceType::Pointer &temp2Di
   reset2DImage(temp2Dimage);
   SpatialObjectToImageFilterType::Pointer imageFilter = SpatialObjectToImageFilterType::New();
 
-  //need to create a 2D slice here, put the polygon on it, and insert it back into the 3D volume...
+  // need to create a 2D slice here, put the polygon on it, and insert it back into the 3D volume...
   try
   {
     imageFilter->SetInput(polygon);
     imageFilter->SetSize(temp2Dimage->GetLargestPossibleRegion().GetSize());
     imageFilter->SetSpacing(temp2Dimage->GetSpacing());
+    imageFilter->SetDirection(temp2Dimage->GetDirection());
     imageFilter->SetMaskResampleFactor(8.0);
     imageFilter->SetMaskDilationSize(1);
     imageFilter->Update();
@@ -226,7 +227,7 @@ int main(int argc, char *argv[])
   }
 
   PointType point;
-  //ITK spatial object to image filter segmentation definitions
+  // ITK spatial object to image filter segmentation definitions
   using WriterType = itk::ImageFileWriter<ImageType>;
 
   std::string templateFilename;
@@ -237,8 +238,8 @@ int main(int argc, char *argv[])
   int iCurrentSlice = 0;
   int iPointsOutsideBoundary = 0;
 
-  //Step 1. is to read in the dicom image to retreive origin, spacing, etc.
-  //the following code is based on the itk example: DicomSeriesReadImageWrite2.cxx
+  // Step 1. is to read in the dicom image to retreive origin, spacing, etc.
+  // the following code is based on the itk example: DicomSeriesReadImageWrite2.cxx
   using ReaderType = itk::ImageSeriesReader<CTImageType>;
   ReaderType::Pointer reader = ReaderType::New();
   using ImageIOType = itk::GDCMImageIO;
@@ -247,9 +248,12 @@ int main(int argc, char *argv[])
   reader->SetImageIO(dicomIO);
 
   using NamesGeneratorType = itk::GDCMSeriesFileNames;
+  using SeriesIdContainer = std::vector<std::string>;
   NamesGeneratorType::Pointer nameGenerator = NamesGeneratorType::New();
   nameGenerator->SetUseSeriesDetails(true);
   nameGenerator->AddSeriesRestriction("0008|0021");
+
+  SeriesIdContainer seriesUID;
 
   nameGenerator->SetDirectory(argv[1]);
   try
@@ -262,60 +266,14 @@ int main(int argc, char *argv[])
     std::cout << "Contains the following DICOM Series: ";
     std::cout << std::endl
               << std::endl;
-    using SeriesIdContainer = std::vector<std::string>;
 
-    const SeriesIdContainer &seriesUID = nameGenerator->GetSeriesUIDs();
-
+    seriesUID = nameGenerator->GetSeriesUIDs();
     SeriesIdContainer::const_iterator seriesItr = seriesUID.begin();
     SeriesIdContainer::const_iterator seriesEnd = seriesUID.end();
     while (seriesItr != seriesEnd)
     {
       std::cout << seriesItr->c_str() << std::endl;
       seriesItr++;
-    }
-
-    std::string seriesIdentifier;
-    seriesIdentifier = seriesUID.begin()->c_str();
-
-    std::cout << "Now reading series: " << seriesIdentifier << std::endl;
-
-    using FileNamesContainer = std::vector<std::string>;
-    FileNamesContainer fileNames;
-
-    fileNames = nameGenerator->GetFileNames(seriesIdentifier);
-    reader->SetFileNames(fileNames);
-
-    try
-    {
-      reader->Update();
-    }
-    catch (itk::ExceptionObject &ex)
-    {
-      std::cout << ex << std::endl;
-      return EXIT_FAILURE;
-    }
-
-    std::cout << argc << std::endl;
-    if (argc < 5)
-    {
-      using WriterType = itk::ImageFileWriter<CTImageType>;
-      WriterType::Pointer writer = WriterType::New();
-
-      std::string imageFilename = argv[3];
-      imageFilename += ".nrrd";
-
-      writer->SetFileName(imageFilename);
-      writer->SetInput(reader->GetOutput());
-      std::cout << "Writing the image as " << imageFilename << std::endl;
-      try
-      {
-        writer->Update();
-      }
-      catch (itk::ExceptionObject &ex)
-      {
-        std::cout << ex << std::endl;
-        return EXIT_FAILURE;
-      }
     }
   }
   catch (itk::ExceptionObject &ex)
@@ -324,7 +282,7 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  //check the RS file is available before conversion
+  // check the RS file is available before conversion
   const char *filename = argv[2];
   gdcm::Reader RTreader;
   RTreader.SetFileName(filename);
@@ -334,14 +292,95 @@ int main(int argc, char *argv[])
     return 0;
   }
 
-  //Step 2. Process the RS file
+  // Step 2. Process the RS file
+  //   const gdcm::FileMetaInformation &h = RTreader.GetFile().GetHeader();
+  std::string refSeriesIdentifier;
+  const gdcm::DataSet &ds = RTreader.GetFile().GetDataSet();
+  std::cout << "Parsing: " << filename << std::endl;
+
+  gdcm::MediaStorage ms;
+  ms.SetFromFile(RTreader.GetFile());
+  std::cout << "media storage: " << ms << std::endl;
+
+  gdcm::Tag trefsersq(0x0008, 0x1115);
+  if (ds.FindDataElement(trefsersq))
+  {
+    const gdcm::DataElement &refsersq = ds.GetDataElement(trefsersq);
+    gdcm::SmartPointer<gdcm::SequenceOfItems> refsersqi = refsersq.GetValueAsSQ();
+    if (!refsersqi || !refsersqi->GetNumberOfItems())
+    {
+      return 0;
+    }
+
+    const gdcm::Item &item = refsersqi->GetItem(1); // Item start at #1
+    gdcm::Attribute<0x0020, 0x000e> refsuid;
+    const gdcm::DataSet &nestedds = item.GetNestedDataSet();
+    refsuid.SetFromDataElement(nestedds.GetDataElement(refsuid.GetTag()));
+    refSeriesIdentifier = refsuid.GetValue();
+    std::cout << "Ref Series Instance UID: " << refSeriesIdentifier << std::endl;
+  }
+
+  std::string seriesIdentifier;
+  SeriesIdContainer::const_iterator seriesItr = seriesUID.begin();
+  SeriesIdContainer::const_iterator seriesEnd = seriesUID.end();
+  while (seriesItr != seriesEnd)
+  {
+    seriesIdentifier = seriesItr->c_str();
+    if(seriesIdentifier.find(refSeriesIdentifier) != std::string::npos)
+      break;
+    seriesItr++;
+  }
+
+  std::cout << "Now reading series: " << seriesIdentifier << std::endl;
+
+  using FileNamesContainer = std::vector<std::string>;
+  FileNamesContainer fileNames;
+
+  fileNames = nameGenerator->GetFileNames(seriesIdentifier);
+  reader->SetFileNames(fileNames);
+
+  try
+  {
+    reader->Update();
+  }
+  catch (itk::ExceptionObject &ex)
+  {
+    std::cout << ex << std::endl;
+    return EXIT_FAILURE;
+  }
+
+  std::cout << argc << std::endl;
+  if (argc < 5)
+  {
+    using WriterType = itk::ImageFileWriter<CTImageType>;
+    WriterType::Pointer writer = WriterType::New();
+
+    std::string imageFilename = argv[3];
+    imageFilename += ".nrrd";
+
+    writer->SetFileName(imageFilename);
+    writer->SetInput(reader->GetOutput());
+    std::cout << "Writing the image as " << imageFilename << std::endl;
+    try
+    {
+      writer->Update();
+    }
+    catch (itk::ExceptionObject &ex)
+    {
+      std::cout << ex << std::endl;
+      return EXIT_FAILURE;
+    }
+  }
+
   templateFilename = argv[2];
   ImageType::Pointer image = ImageType::New();
   image->SetRegions(reader->GetOutput()->GetLargestPossibleRegion());
   image->CopyInformation(reader->GetOutput());
   image->Allocate();
 
-  //we need to create a temporary 2D slice as well...
+  std::cout << reader->GetOutput()->GetLargestPossibleRegion() << std::endl;
+
+  // we need to create a temporary 2D slice as well...
   ImageType::RegionType inputRegion = image->GetLargestPossibleRegion();
   using FilterType = itk::ExtractImageFilter<ImageType, ImageSliceType>;
   FilterType::Pointer filter = FilterType::New();
@@ -352,7 +391,7 @@ int main(int argc, char *argv[])
   ImageType::RegionType desiredRegion;
   desiredRegion.SetSize(size);
   desiredRegion.SetIndex(start);
-  filter->SetDirectionCollapseToIdentity(); //22.02.2013
+  filter->SetDirectionCollapseToIdentity(); // 22.02.2013
   filter->SetExtractionRegion(desiredRegion);
   filter->SetInput(image);
   filter->Update();
@@ -361,14 +400,6 @@ int main(int argc, char *argv[])
   origin[0] = image->GetOrigin()[0];
   origin[1] = image->GetOrigin()[1];
   temp2Dimage->SetOrigin(origin);
-
-  //  const gdcm::FileMetaInformation &h = RTreader.GetFile().GetHeader();
-  const gdcm::DataSet &ds = RTreader.GetFile().GetDataSet();
-  std::cout << "Parsing: " << filename << std::endl;
-
-  gdcm::MediaStorage ms;
-  ms.SetFromFile(RTreader.GetFile());
-  std::cout << "media storage: " << ms << std::endl;
 
   // (3006,0020) SQ (Sequence with explicit length #=4)    # 370, 1 StructureSetROISequence
   gdcm::Tag tssroisq(0x3006, 0x0020);
@@ -400,7 +431,7 @@ int main(int argc, char *argv[])
 
   std::cout << "Number of structures found:" << sqi->GetNumberOfItems() << std::endl;
 
-  //loop through structures
+  // loop through structures
   for (unsigned int pd = 0; pd < sqi->GetNumberOfItems(); ++pd)
   {
     const gdcm::Item &item = sqi->GetItem(pd + 1); // Item start at #1
@@ -430,7 +461,7 @@ int main(int argc, char *argv[])
     if (!snestedds.FindDataElement(stcsq))
     {
       std::cout << "Did not find sttsq data el " << stcsq << "   continuing..." << std::endl;
-      continue; //return 0;
+      continue; // return 0;
     }
     const gdcm::DataElement &sde = snestedds.GetDataElement(stcsq);
 
@@ -452,7 +483,7 @@ int main(int argc, char *argv[])
 
     std::string str_currentOrgan(sde.GetByteValue()->GetPointer(), sde.GetByteValue()->GetLength());
 
-    //trim to remove spaces in organ name which can cause problems in scripts eg. "CBCT01__BULK  BONE .nii" .  Might need to have this as parameter?
+    // trim to remove spaces in organ name which can cause problems in scripts eg. "CBCT01__BULK  BONE .nii" .  Might need to have this as parameter?
     trim(str_currentOrgan);
     if (argc > 4)
     {
@@ -480,7 +511,7 @@ int main(int argc, char *argv[])
     unsigned int nitems = sqi2->GetNumberOfItems();
     std::cout << "Structure " << pd << ". Number of regions: " << nitems << std::endl;
 
-    //now loop through each item for this structure (eg one prostate region on a single slice is an item)
+    // now loop through each item for this structure (eg one prostate region on a single slice is an item)
     for (unsigned int i = 0; i < nitems; ++i)
     {
       PolygonType::Pointer polygon;
@@ -493,7 +524,7 @@ int main(int argc, char *argv[])
       gdcm::Tag tcontourdata(0x3006, 0x0050);
       const gdcm::DataElement &contourdata = nestedds2.GetDataElement(tcontourdata);
 
-      //const gdcm::ByteValue *bv = contourdata.GetByteValue();
+      // const gdcm::ByteValue *bv = contourdata.GetByteValue();
       gdcm::Attribute<0x3006, 0x0050> at;
       at.SetFromDataElement(contourdata);
       const double *pts = at.GetValues();
@@ -505,12 +536,14 @@ int main(int argc, char *argv[])
         point[1] = pts[j + 1];
         point[2] = pts[j + 2];
 
-        //transform points to image co-ordinates
+        // transform points to image co-ordinates
         if (!(image->TransformPhysicalPointToIndex(point, pixelIndex)))
         {
-          //Are there points outside the image boundary.  This may occur with automatically segmented objects such as benches or external body outlines?
+          // Are there points outside the image boundary.  This may occur with automatically segmented objects such as benches or external body outlines?
           iPointsOutsideBoundary++;
         }
+
+        //std::cout << point << " " << pixelIndex << std::endl;
 
         PolygonPointType p;
         p.SetRed(1);
@@ -529,7 +562,7 @@ int main(int argc, char *argv[])
       // we have the points for a contour in a single slice.  We need to join these up and insert into the slice as polygon.
       std::cout << "Inserting region with " << polygon->GetNumberOfPoints() << " points into slice: " << iCurrentSlice << std::endl;
       insertRegion(polygon, temp2Dimage);
-      //merge new polygon from temp image into the contour image
+      // merge new polygon from temp image into the contour image
       mergeImages(temp2Dimage, image, iCurrentSlice);
     }
 
@@ -549,9 +582,9 @@ int main(int argc, char *argv[])
     strNewVolume += "-label.nrrd";
 
     writeFile(image, strNewVolume);
-    resetImage(image); //reset the temporary volume ready for next structure (if any)
+    resetImage(image); // reset the temporary volume ready for next structure (if any)
 
-  } //next structure name
+  } // next structure name
 
   return 0;
 }

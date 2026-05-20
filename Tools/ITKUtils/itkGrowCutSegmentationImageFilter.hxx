@@ -70,6 +70,7 @@ GrowCutSegmentationImageFilter<TInputImage, TOutputImage, TWeightPixelType>
   m_UnknownLabel = static_cast<OutputPixelType>( NumericTraits<OutputPixelType>::ZeroValue() );
 
   m_Radius.Fill(1);
+  this->DynamicMultiThreadingOff();
 }
 
 
