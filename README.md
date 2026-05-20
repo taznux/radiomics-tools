@@ -2,6 +2,19 @@ Radiomics tools
 ===================
 [![Build Status](https://travis-ci.org/taznux/radiomics-tools.svg?branch=master)](https://travis-ci.org/taznux/radiomics-tools) [![codecov](https://codecov.io/gh/taznux/radiomics-tools/branch/master/graph/badge.svg)](https://codecov.io/gh/taznux/radiomics-tools)
 
+> **Status: Superseded — use [qradiomics](https://github.com/choilab-jefferson/qradiomics) for all new work.**
+>
+> The C++ feature extractors in `Tools/FeatureExtraction/` have been fully
+> ported to Python in `qradiomics.feature.rtools` (ITK Python bindings,
+> numerically exact to the C++ binary). This repo is kept as the
+> reference / numerical-verification anchor for the port; all ongoing
+> work happens in qradiomics.
+>
+> ```bash
+> pip install -e ~/gitRepos/qradiomics   # or: git clone https://github.com/choilab-jefferson/qradiomics
+> qr extract -m manifest.csv -p cardiac-toxicity -o features.csv
+> ```
+
 Image processing tools and ruffus based pipeline for radiomics feature analysis
 
 Super build
